@@ -114,7 +114,7 @@ public class ApplicationGUI extends JFrame {
 
                 if (result == JOptionPane.OK_OPTION) {
                     String newUsername = newUsernameField.getText().trim();
-                    String newPassword = newString(newPasswordField.getPassword());
+                    String newPassword = new String(newPasswordField.getPassword());
 
                     if (newUsername.isEmpty() || newPassword.isEmpty()) {
                         JOptionPane.showMessageDialog(null, "Fields cannot be empty!", "Error", JOptionPane.WARNING_MESSAGE);
