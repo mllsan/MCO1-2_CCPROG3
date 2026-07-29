@@ -11,5 +11,5 @@ javac *.java
 ```
 Enter this in terminal to run the program:
 ```
-java Main
+java ApplicationGUI
 ```
