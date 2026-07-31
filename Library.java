@@ -137,6 +137,59 @@ public class Library implements java.io.Serializable {
     }
 
     /**
+     * Displays all media entries of the specific anime/movie genre.
+     *
+     * @param genre the genre used to filter entries
+     */
+    public void displayEntriesByGenre(Genre genre) {
+        boolean found = false;
+        System.out.println("\n========= " + genre + " ENTRIES ========");
+        if (entries.isEmpty()) {
+            System.out.println("Library is empty.");
+        } else {
+            for (MediaEntry entry : entries) {
+                if (entry.getGenre() == genre) {
+                    found = true;
+                    displayEntry(entry, true, true);
+                    System.out.println("-----------------------------------");
+                }
+            }
+            if (!found) {
+                System.out.println("No " + genre + " Entries Found.");
+                System.out.println("-----------------------------------");
+            }
+        }
+    }
+
+    /**
+     * Displays all media entries of the specific music genre.
+     *
+     * @param genre the genre used to filter entries
+     */
+    public void displayEntriesByMusicGenre(MusicGenre musicGenre) {
+        boolean found = false;
+        System.out.println("\n========= " + musicGenre + " ALBUMS ========");
+        if (entries.isEmpty()) {
+            System.out.println("Library is empty.");
+        } else {
+            for (MediaEntry entry : entries) {
+                if (entry instanceof Album) {
+                    Album album = (Album) entry;
+                    if (album.getMusicGenre() == musicGenre) {
+                        found = true;
+                        displayEntry(entry, true, true);
+                        System.out.println("-----------------------------------");
+                    }
+                }
+            }
+            if (!found) {
+                System.out.println("No " + musicGenre + " albums found.");
+                System.out.println("-----------------------------------");
+            }
+        }
+    }
+
+    /**
      * Displays a summary of the library which includes the total number of entries,
      * number of planned, in-progress, and completed entries,
      * and the user's average rating of completed entries
@@ -193,12 +246,20 @@ public class Library implements java.io.Serializable {
         if (showMediaType)
             System.out.println("Media Type: " + entry.getMediaType());
 
-        if(entry instanceof Album)
-            System.out.println("Artist: " + ((Album) entry).getArtist());
-        else if(entry instanceof Anime)
-            System.out.println("Number of Episodes: " + ((Anime) entry).getNumEps());
-        else if(entry instanceof Movie)
+        if (entry instanceof Album) {
+            Album album = (Album) entry;
+            System.out.println("Artist: " + album.getArtist());
+            System.out.println("Music Type: " + album.getDisplayMusicGenre());
+        } else if (entry instanceof Anime) {
+            Anime anime = (Anime) entry;
+            System.out.println("Genre: " + anime.getDisplayGenre());
+            System.out.println("Season Number: " + (anime.getSeasonNumber() == -1 ? "-" : anime.getSeasonNumber()));
+            System.out.println("Current Episode: " + (anime.getCurrentEpisode() == -1 ? "-" : anime.getCurrentEpisode()));
+            System.out.println("Total Episodes: " + anime.getTotalEpisodes());
+        } else if (entry instanceof Movie) {
+            System.out.println("Genre: " + entry.getDisplayGenre());
             System.out.println("Duration: " + ((Movie) entry).getDuration() + " minutes");
+        }
         
         if (showStatus)
             System.out.println("Status: " + entry.getStatus());
