@@ -3,51 +3,60 @@
  *
  * Relationships:
  * - Inherits from the MediaEntry superclass.
- * - Adds the number of episodes specific to anime.
+ * - Adds episode and season attributes specific to anime.
  */
 public class Anime extends MediaEntry {
-    private int numOfEps;
+    private int totalEpisodes;
+    private int currentEpisode;
+    private int seasonNumber;
 
     /**
      * Constructor for the Anime class.
      * Initializes the common MediaEntry attributes and
-     * the anime-specific episode count.
+     * the anime-specific attributes.
      *
      * @param title the title of the anime
      * @param status the current status
      * @param rating the user's rating
      * @param review the user's review
-     * @param numOfEps the total number of episodes
+     * @param totalEpisodes the total number of episodes
+     * @param currentEpisode the current episode watched
+     * @param seasonNumber the season number
      */
-    public Anime(String title, Status status, int rating, String review, int numOfEps){
+    public Anime(String title, Status status, int rating, String review, 
+                 int totalEpisodes, int currentEpisode, int seasonNumber) {
         super(title, status, rating, review);
-        this.numOfEps = numOfEps;
+        this.totalEpisodes = totalEpisodes;
+        this.currentEpisode = currentEpisode;
+        this.seasonNumber = seasonNumber;
     }
 
-    /**
-     * Returns the media type of this entry.
-     *
-     * @return "Anime"
-     */
-    public String getMediaType(){
+    @Override
+    public String getMediaType() {
         return "Anime";
     }
 
-    /**
-     * Returns the number of episodes.
-     *
-     * @return the total number of episodes
-     */
-    public int getNumEps(){
-        return numOfEps;
+    public int getTotalEpisodes() {
+        return totalEpisodes;
     }
 
-    /**
-     * Updates the number of episodes.
-     *
-     * @param numOfEps the new number of episodes
-     */
-    public void setNumEps(int numOfEps){
-        this.numOfEps = numOfEps;
+    public void setTotalEpisodes(int totalEpisodes) {
+        this.totalEpisodes = totalEpisodes;
+    }
+
+    public int getCurrentEpisode() {
+        return currentEpisode;
+    }
+
+    public void setCurrentEpisode(int currentEpisode) {
+        this.currentEpisode = currentEpisode;
+    }
+
+    public int getSeasonNumber() {
+        return seasonNumber;
+    }
+
+    public void setSeasonNumber(int seasonNumber) {
+        this.seasonNumber = seasonNumber;
     }
 }
