@@ -7,6 +7,7 @@
  */
 public class Album extends MediaEntry {
     private String artist;
+    private MusicGenre musicGenre;
 
     /**
      * Constructor for the Album class.
@@ -20,9 +21,9 @@ public class Album extends MediaEntry {
      * @param artist the artist of the album
      */
     public Album(String title, Status status, int rating, String review, String artist){
-        // Initializes the inherited MediaEntry attributes.
         super(title, status, rating, review);
         this.artist = artist;
+        this.musicGenre = MusicGenre.OTHER;
     }
 
     /**
@@ -50,5 +51,32 @@ public class Album extends MediaEntry {
      */
     public void setArtist(String artist){
         this.artist = artist;
+    }
+
+    /**
+     * Returns the music genre/type of the album.
+     *
+     * @return the MusicGenre
+     */
+    public MusicGenre getMusicGenre() {
+        return musicGenre;
+    }
+
+    /**
+     * Updates the genre of the album.
+     *
+     * @param artist the new genre
+     */
+    public void setMusicGenre(MusicGenre musicGenre) {
+        this.musicGenre = musicGenre;
+    }
+
+    /**
+     * Returns the genre of the album.
+     *
+     * @return the genre
+     */
+    public String getDisplayMusicGenre() {
+        return (musicGenre == null) ? "-" : musicGenre.toString();
     }
 }
