@@ -36,6 +36,38 @@ public class MediaInput {
     }
 
     /**
+     * Prompts the user to select a genre for the a movie/anime media entry.
+     *
+     * @return the Genre selected by the user
+     */
+    public Genre selectGenre() {
+        Genre[] genres = Genre.values();
+        System.out.println("Select Genre:");
+        for (int i = 0; i < genres.length; i++) {
+            System.out.println("[" + (i + 1) + "] " + genres[i]);
+        }
+        System.out.print(">> ");
+        int choice = InputChecker.getValidInput(input, 1, genres.length);
+        return genres[choice - 1];
+    }
+
+    /**
+     * Prompts the user to select a genre for a album media entry.
+     *
+     * @return the selected Genre
+     */
+    public MusicGenre selectMusicGenre() {
+        MusicGenre[] genres = MusicGenre.values();
+        System.out.println("Select Genre:");
+        for (int i = 0; i < genres.length; i++) {
+            System.out.println("[" + (i + 1) + "] " + genres[i]);
+        }
+        System.out.print(">> ");
+        int choice = InputChecker.getValidInput(input, 1, genres.length);
+        return genres[choice - 1];
+    }
+
+    /**
      * Creates a new media entry based on the user's selected media type.
      * Prompts the user to enter the required information.
      *
@@ -44,7 +76,8 @@ public class MediaInput {
      * @return the created MediaEntry
      */
     public MediaEntry createEntry(int mediaChoice, Library library){
-        int rating = -1, numOfEps = 0, duration = 0;
+        int rating = -1, duration = 0;
+        int totalEpisodes = 0, currentEpisode = 0, seasonNumber = 0;
         String review = "", artist = "";
         MediaEntry result = null;
 
@@ -57,8 +90,14 @@ public class MediaInput {
             Status status = statusChosen();
 
             if (mediaChoice == 1){
-                System.out.print("Enter Number of Episodes: ");
-                numOfEps = Integer.parseInt(input.nextLine());
+                System.out.print("Enter Total Number of Episodes: ");
+                totalEpisodes = Integer.parseInt(input.nextLine());
+
+                System.out.print("Enter Current Episode: ");
+                currentEpisode = Integer.parseInt(input.nextLine());
+
+                System.out.print("Enter Season Number: ");
+                seasonNumber = Integer.parseInt(input.nextLine());
             } else if (mediaChoice == 2){
                 System.out.print("Enter Duration (minutes): ");
                 duration = Integer.parseInt(input.nextLine());
@@ -75,13 +114,24 @@ public class MediaInput {
                 review = input.nextLine();
             }
 
-            if (mediaChoice == 1){
-                result = new Anime(title, status, rating, review, numOfEps);
-            } else if (mediaChoice == 2){
-                result = new Movie(title, status, rating, review, duration);
+            if (mediaChoice == 3) { 
+                MusicGenre mGenre = selectMusicGenre();
+                
+                Album album = new Album(title, status, rating, review, artist);
+                album.setMusicGenre(mGenre);
+                result = album;
+            } else {
+                Genre genre = selectGenre();
 
-            } else if (mediaChoice == 3){
-                result = new Album(title, status, rating, review, artist);
+                if (mediaChoice == 1) {
+                    result = new Anime(title, status, rating, review, totalEpisodes, currentEpisode, seasonNumber);
+                } else if (mediaChoice == 2) {
+                    result = new Movie(title, status, rating, review, duration);
+                }
+
+                if (result != null) {
+                    result.setGenre(genre);
+                }
             }
         }
 
@@ -96,8 +146,10 @@ public class MediaInput {
      * @param entry the MediaEntry to edit
      * @param library the user's library
      */
-    public void editEntry(MediaEntry entry, Library library){
-        int choice; 
+    public void editEntry(MediaEntry entry, Library library) {
+        int choice = 0; 
+        boolean isAnime = entry.getMediaType().equals("Anime");
+        int exitChoice = isAnime ? 9 : 7;
 
         do {
             System.out.println("\n--- Editing " + entry.getTitle() + " ---");
@@ -105,20 +157,25 @@ public class MediaInput {
             System.out.println("[2] Edit Status");
             System.out.println("[3] Edit Rating");
             System.out.println("[4] Edit Review");
+            System.out.println("[5] Edit Genre");
 
-            if (entry.getMediaType().equals("Anime")) 
-                System.out.println("[5] Edit Number of Episodes");
-            else if (entry.getMediaType().equals("Movie"))
-                System.out.println("[5] Edit Duration");
-            else if (entry.getMediaType().equals("Album"))
-                System.out.println("[5] Edit Artist Name");
-
-            System.out.println("[6] Finish & Go Back");
-            System.out.print(">> ");
-            choice = InputChecker.getValidInput(input,1,6);
+            if (isAnime) {
+                System.out.println("[6] Edit Total Episodes");
+                System.out.println("[7] Edit Current Episode (In-Progress only)");
+                System.out.println("[8] Edit Season Number (In-Progress only)");
+                System.out.println("[9] Finish & Go Back");
+                System.out.print(">> ");
+                choice = InputChecker.getValidInput(input, 1, 9);
+            } else if (entry.getMediaType().equals("Movie") || entry.getMediaType().equals("Album")) {
+                String specific = (entry instanceof Movie) ? "Edit Duration" : "Edit Artist Name";
+                System.out.println("[6] " + specific);
+                System.out.println("[7] Finish & Go Back");
+                System.out.print(">> ");
+                choice = InputChecker.getValidInput(input, 1, 7);
+            }
             System.out.println();
 
-            switch (choice){
+            switch (choice) {
                 case 1:
                     System.out.print("Enter New Title: ");
                     String newTitle = input.nextLine();
@@ -141,16 +198,16 @@ public class MediaInput {
                     System.out.println("Status Updated!");
                     break;
                 case 3:
-                    if (entry.getStatus() != Status.COMPLETED){
+                    if (entry.getStatus() != Status.COMPLETED) {
                         System.out.println("Only Completed Entries can be Rated.");
                     } else {
                         System.out.print("Enter New Rating (1-10): ");
-                        entry.setRating(InputChecker.getValidInput(input,1,10));
+                        entry.setRating(InputChecker.getValidInput(input, 1, 10));
                         System.out.println("Rating Updated!");
                     }
                     break;
                 case 4:
-                    if (entry.getStatus() != Status.COMPLETED){
+                    if (entry.getStatus() != Status.COMPLETED) {
                         System.out.println("Only Completed Entries can be Reviewed.");
                     } else {
                         System.out.print("Enter New Review: ");
@@ -159,10 +216,21 @@ public class MediaInput {
                     }
                     break;
                 case 5:
+                    if (entry instanceof Album) {
+                        MusicGenre mg = selectMusicGenre();
+                        ((Album) entry).setMusicGenre(mg);
+                        System.out.println("Genre Updated!");
+                    } else {
+                        Genre g = selectGenre();
+                        entry.setGenre(g);
+                        System.out.println("Genre Updated!");
+                    }
+                    break;
+                case 6:
                     if (entry instanceof Anime) {
-                        System.out.print("Enter New Number of Episodes: ");
-                        ((Anime) entry).setNumEps(Integer.parseInt(input.nextLine()));
-                        System.out.println("Episodes Updated!");
+                        System.out.print("Enter New Total Episodes: ");
+                        ((Anime) entry).setTotalEpisodes(Integer.parseInt(input.nextLine()));
+                        System.out.println("Total Episodes Updated!");
                     } else if (entry instanceof Movie) {
                         System.out.print("Enter New Duration (minutes): ");
                         ((Movie) entry).setDuration(Integer.parseInt(input.nextLine()));
@@ -173,12 +241,34 @@ public class MediaInput {
                         System.out.println("Artist Updated!");
                     }
                     break;
-                case 6:
-                    System.out.println("Returning to Main Menu . . .");
+                case 7:
+                    if (isAnime) {
+                        System.out.print("Enter New Current Episode: ");
+                        ((Anime) entry).setCurrentEpisode(Integer.parseInt(input.nextLine()));
+                        System.out.println("Current Episode Updated!");
+                    } else {
+                        System.out.println("Returning to Main Menu . . .");
+                    }
+                    break;
+                case 8:
+                    if (isAnime) {
+                        System.out.print("Enter New Season Number: ");
+                        ((Anime) entry).setSeasonNumber(Integer.parseInt(input.nextLine()));
+                        System.out.println("Season Number Updated!");
+                    } else {
+                        System.out.println("Error: Invalid Option");
+                    }
+                    break;
+                case 9:
+                    if (isAnime) {
+                        System.out.println("Returning to Main Menu . . .");
+                    } else {
+                        System.out.println("Error: Invalid Option");
+                    }
                     break;
                 default:
                     System.out.println("Error: Invalid Option");
-                }
-        } while (choice != 6);
+            }
+        } while (choice != exitChoice);
     }
 }
