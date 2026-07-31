@@ -10,6 +10,7 @@ public abstract class MediaEntry implements java.io.Serializable {
     private Status status;
     private int rating;
     private String review;
+    private Genre genre;
 
     /**
      * Constructor for the MediaEntry class.
@@ -27,6 +28,7 @@ public abstract class MediaEntry implements java.io.Serializable {
     public MediaEntry(String title, Status status, int rating, String review){
         this.title = title;
         this.status = status;
+        this.genre = Genre.OTHER;
 
         // Ratings and reviews only apply to completed entries.
         if(status == Status.COMPLETED) {
@@ -179,5 +181,32 @@ public abstract class MediaEntry implements java.io.Serializable {
             rev = review;
         
         return rev;
+    }
+
+    /**
+     * Returns the genre.
+     *
+     * @return the genre
+     */
+    public Genre getGenre() {
+        return genre;
+    }
+
+    /**
+     * Updates the genre.
+     *
+     * @param genre the new genre
+     */
+    public void setGenre(Genre genre) {
+        this.genre = genre;
+    }
+
+    /**
+     * Returns the genre of the entry.
+     *
+     * @return "-" if no genre exists; otherwise the genre
+     */
+    public String getDisplayGenre() {
+        return (genre == null) ? "-" : genre.toString();
     }
 }
