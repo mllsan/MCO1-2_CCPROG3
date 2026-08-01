@@ -9,6 +9,7 @@ import java.util.Scanner;
  * - Creates and modifies MediaEntry objects and its subclasses.
  * - Used by Main to process user input for media entries.
  */
+
 public class MediaInput {
     private Scanner input = new Scanner(System.in);
 
@@ -23,15 +24,13 @@ public class MediaInput {
         System.out.println("[2] In Progress");
         System.out.println("[3] Completed");
         System.out.print(">> ");
-        int choice = InputChecker.getValidInput(input,1,3);
+        int choice = InputChecker.getValidInput(input, 1, 3);
 
         switch (choice){
             case 1: return Status.PLANNED;
             case 2: return Status.INPROGRESS;
             case 3: return Status.COMPLETED;
-            default:
-                System.out.println("Invalid selection, relocating to PLANNED");
-                return Status.PLANNED;
+            default: return Status.PLANNED;
         }
     }
 
@@ -76,8 +75,7 @@ public class MediaInput {
      * @return the created MediaEntry
      */
     public MediaEntry createEntry(int mediaChoice, Library library){
-        int rating = -1, duration = 0;
-        int totalEpisodes = 0, currentEpisode = 0, seasonNumber = 0;
+        int rating = -1, duration = 0, totalEpisodes = 0;
         String review = "", artist = "";
         MediaEntry result = null;
 
@@ -92,12 +90,6 @@ public class MediaInput {
             if (mediaChoice == 1){
                 System.out.print("Enter Total Number of Episodes: ");
                 totalEpisodes = Integer.parseInt(input.nextLine());
-
-                System.out.print("Enter Current Episode: ");
-                currentEpisode = Integer.parseInt(input.nextLine());
-
-                System.out.print("Enter Season Number: ");
-                seasonNumber = Integer.parseInt(input.nextLine());
             } else if (mediaChoice == 2){
                 System.out.print("Enter Duration (minutes): ");
                 duration = Integer.parseInt(input.nextLine());
@@ -108,7 +100,7 @@ public class MediaInput {
 
             if (status == Status.COMPLETED){
                 System.out.print("Enter Rating (1-10): ");
-                rating = InputChecker.getValidInput(input,1,10);
+                rating = InputChecker.getValidInput(input, 1, 10);
 
                 System.out.print("Enter Review: ");
                 review = input.nextLine();
@@ -116,7 +108,6 @@ public class MediaInput {
 
             if (mediaChoice == 3) { 
                 MusicGenre mGenre = selectMusicGenre();
-                
                 Album album = new Album(title, status, rating, review, artist);
                 album.setMusicGenre(mGenre);
                 result = album;
@@ -124,7 +115,19 @@ public class MediaInput {
                 Genre genre = selectGenre();
 
                 if (mediaChoice == 1) {
-                    result = new Anime(title, status, rating, review, totalEpisodes, currentEpisode, seasonNumber);
+                    Anime anime = new Anime(title, status, rating, review, totalEpisodes);
+                    
+                    if (status == Status.COMPLETED) {
+                        anime.markAllEpisodesCompleted();
+                    } else if (status == Status.INPROGRESS) {
+                        System.out.print("Enter Current Episode Watched (1-" + totalEpisodes + "): ");
+                        int currentEp = InputChecker.getValidInput(input, 0, totalEpisodes);
+                        anime.updateEpisodeStatusesFromProgress(currentEp);
+                    } else {
+                        anime.markAllEpisodesPlanned();
+                    }
+
+                    result = anime;
                 } else if (mediaChoice == 2) {
                     result = new Movie(title, status, rating, review, duration);
                 }
@@ -139,6 +142,23 @@ public class MediaInput {
     }
 
     /**
+     * Prompts the user to pick an episode from a specific Anime entry
+     * and updates its viewing status.
+     *
+     * @param anime the Anime object containing the episodes to be updated
+     */
+    private void editEpisodeStatus(Anime anime) {
+        System.out.print("Enter Episode Number to Edit Status (1-" + anime.getTotalEpisodes() + "): ");
+        int epNum = InputChecker.getValidInput(input, 1, anime.getTotalEpisodes());
+        Episode ep = anime.getEpisode(epNum);
+
+        System.out.println("\nSelect New Status for Episode " + epNum + ":");
+        Status s = statusChosen();
+        ep.setStatus(s);
+        System.out.println("Episode " + epNum + " Status Updated to " + s + "!");
+    }
+
+    /**
      * Allows the user to edit the attributes of an existing media entry.
      * Prompts the user to enter the updated information of the 
      * attributes they wish to edit.
@@ -149,7 +169,7 @@ public class MediaInput {
     public void editEntry(MediaEntry entry, Library library) {
         int choice = 0; 
         boolean isAnime = entry.getMediaType().equals("Anime");
-        int exitChoice = isAnime ? 9 : 7;
+        int exitChoice = isAnime ? 8 : 7;
 
         do {
             System.out.println("\n--- Editing " + entry.getTitle() + " ---");
@@ -161,11 +181,10 @@ public class MediaInput {
 
             if (isAnime) {
                 System.out.println("[6] Edit Total Episodes");
-                System.out.println("[7] Edit Current Episode (In-Progress only)");
-                System.out.println("[8] Edit Season Number (In-Progress only)");
-                System.out.println("[9] Finish & Go Back");
+                System.out.println("[7] Edit Episode Statuses");
+                System.out.println("[8] Finish & Go Back");
                 System.out.print(">> ");
-                choice = InputChecker.getValidInput(input, 1, 9);
+                choice = InputChecker.getValidInput(input, 1, 8);
             } else if (entry.getMediaType().equals("Movie") || entry.getMediaType().equals("Album")) {
                 String specific = (entry instanceof Movie) ? "Edit Duration" : "Edit Artist Name";
                 System.out.println("[6] " + specific);
@@ -179,7 +198,6 @@ public class MediaInput {
                 case 1:
                     System.out.print("Enter New Title: ");
                     String newTitle = input.nextLine();
-
                     if (library.getEntry(newTitle) != null) {
                         System.out.println("An Entry with that Title Already Exists.");
                     } else {
@@ -190,11 +208,27 @@ public class MediaInput {
                 case 2:
                     Status newStatus = statusChosen();
                     entry.setStatus(newStatus);
-                    System.out.print("Enter Rating (1-10): ");
-                    entry.setRating(InputChecker.getValidInput(input, 1, 10));
 
-                    System.out.print("Enter Review: ");
-                    entry.setReview(input.nextLine());
+                    if (isAnime) {
+                        Anime anime = (Anime) entry;
+                        if (newStatus == Status.COMPLETED) {
+                            anime.markAllEpisodesCompleted();
+                        } else if (newStatus == Status.INPROGRESS) {
+                            System.out.print("Enter Current Episode Watched (1-" + anime.getTotalEpisodes() + "): ");
+                            int currentEp = InputChecker.getValidInput(input, 0, anime.getTotalEpisodes());
+                            anime.updateEpisodeStatusesFromProgress(currentEp);
+                        } else {
+                            anime.markAllEpisodesPlanned();
+                        }
+                    }
+
+                    if (newStatus == Status.COMPLETED) {
+                        System.out.print("Enter Rating (1-10): ");
+                        entry.setRating(InputChecker.getValidInput(input, 1, 10));
+                        System.out.print("Enter Review: ");
+                        entry.setReview(input.nextLine());
+                    }
+
                     System.out.println("Status Updated!");
                     break;
                 case 3:
@@ -243,23 +277,12 @@ public class MediaInput {
                     break;
                 case 7:
                     if (isAnime) {
-                        System.out.print("Enter New Current Episode: ");
-                        ((Anime) entry).setCurrentEpisode(Integer.parseInt(input.nextLine()));
-                        System.out.println("Current Episode Updated!");
+                        editEpisodeStatus((Anime) entry);
                     } else {
                         System.out.println("Returning to Main Menu . . .");
                     }
                     break;
                 case 8:
-                    if (isAnime) {
-                        System.out.print("Enter New Season Number: ");
-                        ((Anime) entry).setSeasonNumber(Integer.parseInt(input.nextLine()));
-                        System.out.println("Season Number Updated!");
-                    } else {
-                        System.out.println("Error: Invalid Option");
-                    }
-                    break;
-                case 9:
                     if (isAnime) {
                         System.out.println("Returning to Main Menu . . .");
                     } else {
