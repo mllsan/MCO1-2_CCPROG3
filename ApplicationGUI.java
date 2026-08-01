@@ -17,8 +17,7 @@ public class ApplicationGUI extends JFrame {
         applyTheme();
 
         if (handleAuthentication()) {
-            JOptionPane.showMessageDialog(this, "Welcome back, " + activeUser.getUsername() + "!");
-            // main library ui
+            buildMainMenu();
         } 
         else {
             System.exit(0);
@@ -195,6 +194,88 @@ public class ApplicationGUI extends JFrame {
                 BorderFactory.createEmptyBorder(5, 8, 5, 8)
         ));
         return pf;
+    }
+
+    private void buildMainMenu() {
+        getContentPane().removeAll();
+
+        setTitle("Media Vault");
+
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(BG);
+
+        // TITLE
+        JLabel title = new JLabel("MEDIA VAULT", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 30));
+        title.setForeground(TEXT);
+
+        JLabel welcome = new JLabel("Welcome, " + activeUser.getUsername(), SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        title.setForeground(TEXT);
+
+        JPanel north = new JPanel();
+        north.setBackground(BG);
+        north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
+
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        welcome.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        north.add(Box.createVerticalStrut(20));
+        north.add(title);
+        north.add(Box.createVerticalStrut(5));
+        north.add(welcome);
+        north.add(Box.createVerticalStrut(20));
+
+        // BUTTONS
+        JPanel center = new JPanel();
+        center.setBackground(BG);
+        center.setLayout(new GridLayout(5,1,15,15));
+        center.setBorder(BorderFactory.createEmptyBorder(20,60,30,60));
+
+        JButton libraryButton = createMenuButton("📚 View Library");
+        center.add(libraryButton);
+        JButton addButton = createMenuButton("➕ Add Media");
+        center.add(addButton);
+        JButton searchButton = createMenuButton("🔍 Search Entry");
+        center.add(searchButton);
+        JButton summaryButton = createMenuButton("📊 Library Summary");
+        center.add(summaryButton);
+        JButton exitButton = createMenuButton("💾 Save & Exit");
+        center.add(exitButton);
+
+        // ACTIONS
+        libraryButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "View Library goes here."));
+        addButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Add Media goes here."));
+        searchButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Search Entry goes here."));
+        summaryButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Library Summary goes here."));
+        exitButton.addActionListener(e -> {SaveData.saveAccount(activeUser);
+                                             JOptionPane.showMessageDialog(this, "Progress Saved!");
+                                             dispose(); });
+    
+        mainPanel.add(north, BorderLayout.NORTH);
+        mainPanel.add(center, BorderLayout.CENTER);
+
+        add(mainPanel);
+
+        revalidate();
+        repaint();
+
+        setVisible(true);
+    }
+
+    private JButton createMenuButton(String text) {
+       JButton button = new JButton(text);
+
+        button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        button.setBackground(new Color(125,102,196));
+        button.setForeground(Color.WHITE);
+        button.setOpaque(true);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(12,15,12,15));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        return button;
     }
 
     public static void main(String[] args) {
