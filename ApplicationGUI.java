@@ -210,7 +210,7 @@ public class ApplicationGUI extends JFrame {
         title.setForeground(TEXT);
 
         JLabel welcome = new JLabel("Welcome, " + activeUser.getUsername(), SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        title.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         title.setForeground(TEXT);
 
         JPanel north = new JPanel();
@@ -244,7 +244,7 @@ public class ApplicationGUI extends JFrame {
         center.add(exitButton);
 
         // ACTIONS
-        libraryButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "View Library goes here."));
+        libraryButton.addActionListener(e -> showLibrary());
         addButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Add Media goes here."));
         searchButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Search Entry goes here."));
         summaryButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Library Summary goes here."));
@@ -276,6 +276,84 @@ public class ApplicationGUI extends JFrame {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         return button;
+    }
+
+    private void showLibrary() {
+        getContentPane().removeAll();
+
+        setTitle("Media Vault - Library");
+
+        JPanel main = new JPanel(new BorderLayout(15,15));
+        main.setBackground(BG);
+        main.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+
+        JPanel north = new JPanel(new BorderLayout());
+        north.setBackground(BG);
+
+        JLabel title = new JLabel("📚 My Library", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setForeground(TEXT);
+
+        north.add(title, BorderLayout.NORTH);
+
+        JPanel filterPanel = new JPanel(new FlowLayout());
+        filterPanel.setBackground(BG);
+
+        JComboBox<String> statusFilter = new JComboBox<>(new String[]{
+                                                            "ALL",
+                                                            "PLANNED",
+                                                            "INPROGRESS",
+                                                            "COMPLETED" });
+        JComboBox<String> mediaFilter = new JComboBox<>(new String[]{
+                                                            "ALL",
+                                                            "Anime",
+                                                            "Movie",
+                                                            "Album" });
+        
+        JButton refreshButton = createMenuButton("Refresh");
+
+        filterPanel.add(new JLabel("Status"));
+        filterPanel.add(statusFilter);
+        filterPanel.add(Box.createHorizontalStrut(20));
+        filterPanel.add(new JLabel("Media"));
+        filterPanel.add(mediaFilter);
+        filterPanel.add(Box.createHorizontalStrut(20));
+        filterPanel.add(refreshButton);
+
+        north.add(filterPanel, BorderLayout.SOUTH);
+        main.add(title, BorderLayout.NORTH);
+
+        JPanel libraryPanel = new JPanel();
+        libraryPanel.setLayout(new BoxLayout(libraryPanel, BoxLayout.Y_AXIS));
+        libraryPanel.setBackground(BG);
+
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(Color.WHITE);
+
+        card.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(220,220,220)),
+                                                        BorderFactory.createEmptyBorder(15,15,15,15)));
+
+        card.add(new JLabel("One Piece"));
+        card.add(new JLabel("Anime"));
+        card.add(new JLabel("Status: Completed"));
+        card.add(new JLabel("Episodes: 1137"));
+        card.add(new JLabel("Rating: 10"));
+        card.add(new JLabel("Review: Peak Fiction"));
+
+        libraryPanel.add(card);
+
+        JScrollPane scrollPane = new JScrollPane(libraryPanel);
+
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        main.add(scrollPane, BorderLayout.CENTER);
+
+        add(main);
+
+        revalidate();
+        repaint();
     }
 
     public static void main(String[] args) {
