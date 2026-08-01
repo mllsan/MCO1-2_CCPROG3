@@ -78,6 +78,8 @@ public class MediaInput {
         int rating = -1, duration = 0, totalEpisodes = 0;
         String review = "", artist = "";
         MediaEntry result = null;
+        Genre genre = null;
+        MusicGenre mGenre = null;
 
         System.out.print("Enter Title: ");
         String title = input.nextLine();
@@ -98,6 +100,13 @@ public class MediaInput {
                 artist = input.nextLine();
             }
 
+            if (mediaChoice == 3) { 
+                mGenre = selectMusicGenre();
+                
+            } else {
+                genre = selectGenre();
+            }
+
             if (status == Status.COMPLETED){
                 System.out.print("Enter Rating (1-10): ");
                 rating = InputChecker.getValidInput(input, 1, 10);
@@ -107,13 +116,10 @@ public class MediaInput {
             }
 
             if (mediaChoice == 3) { 
-                MusicGenre mGenre = selectMusicGenre();
                 Album album = new Album(title, status, rating, review, artist);
                 album.setMusicGenre(mGenre);
                 result = album;
             } else {
-                Genre genre = selectGenre();
-
                 if (mediaChoice == 1) {
                     Anime anime = new Anime(title, status, rating, review, totalEpisodes);
                     
