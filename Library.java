@@ -7,9 +7,9 @@ import java.util.ArrayList;
  * - Has a collection of MediaEntry objects using an ArrayList.
  * - Manages MediaEntry objects and its subclasses.
  * - Is serializable, allowing the library and its contents to be saved and loaded.
- *
  */
 public class Library implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     private ArrayList<MediaEntry> entries;
 
     /**
@@ -61,7 +61,7 @@ public class Library implements java.io.Serializable {
      * @param entry the MediaEntry to retrieve and display
      */
     public void retrieveEntry(MediaEntry entry) {
-        displayEntry(entry, true, true);
+        displayEntry(entry, true, true, true);
     }
 
     /**
@@ -72,10 +72,10 @@ public class Library implements java.io.Serializable {
         System.out.println("\n=========== ALL ENTRIES ===========");
 
         if(entries.isEmpty()) {
-                System.out.println("Library is empty.");
+            System.out.println("Library is empty.");
         } else {
             for(MediaEntry entry : entries) {
-                displayEntry(entry, true, true);
+                displayEntry(entry, true, true, false);
                 System.out.println("-----------------------------------");
             }
         }
@@ -92,12 +92,12 @@ public class Library implements java.io.Serializable {
         System.out.println("\n======== " + status + " ENTRIES =======");
 
         if(entries.isEmpty()) {
-                System.out.println("Library is empty.");
+            System.out.println("Library is empty.");
         } else {
             for(MediaEntry entry : entries) {
                 if(entry.getStatus() == status) {
                     found = true;
-                    displayEntry(entry, false, true);
+                    displayEntry(entry, false, true, false);
                     System.out.println("-----------------------------------");
                 }
             }
@@ -119,12 +119,12 @@ public class Library implements java.io.Serializable {
 
         System.out.println("\n========= " + type.toUpperCase() + " ENTRIES ========");
         if(entries.isEmpty()) {
-                System.out.println("Library is empty.");
+            System.out.println("Library is empty.");
         } else {
             for(MediaEntry entry : entries) {
                 if(entry.getMediaType().equalsIgnoreCase(type)) {
                     found = true;
-                    displayEntry(entry, true, false);
+                    displayEntry(entry, true, false, false);
                     System.out.println("-----------------------------------");
                 }
             }
@@ -150,7 +150,7 @@ public class Library implements java.io.Serializable {
             for (MediaEntry entry : entries) {
                 if (entry.getGenre() == genre) {
                     found = true;
-                    displayEntry(entry, true, true);
+                    displayEntry(entry, true, true, false);
                     System.out.println("-----------------------------------");
                 }
             }
@@ -164,7 +164,7 @@ public class Library implements java.io.Serializable {
     /**
      * Displays all media entries of the specific music genre.
      *
-     * @param genre the genre used to filter entries
+     * @param musicGenre the genre used to filter entries
      */
     public void displayEntriesByMusicGenre(MusicGenre musicGenre) {
         boolean found = false;
@@ -177,7 +177,7 @@ public class Library implements java.io.Serializable {
                     Album album = (Album) entry;
                     if (album.getMusicGenre() == musicGenre) {
                         found = true;
-                        displayEntry(entry, true, true);
+                        displayEntry(entry, true, true, false);
                         System.out.println("-----------------------------------");
                     }
                 }
@@ -203,7 +203,7 @@ public class Library implements java.io.Serializable {
                 case PLANNED:
                     planned++;
                     break;
-               case INPROGRESS:
+                case INPROGRESS:
                     inProgress++;
                     break;
                 case COMPLETED:
@@ -234,13 +234,14 @@ public class Library implements java.io.Serializable {
     }
 
     /**
-     * Displays the details of a specific media entry.
+     * Helper method to display entry details.
      *
      * @param entry the MediaEntry to display
-     * @param showStatus true to display the entry's status and false to hide
-     * @param showMediaType true to display the media type and false to hide
+     * @param showStatus true to display status
+     * @param showMediaType true to display media type
+     * @param showEpisodes true to list out individual episodes of Anime
      */
-    private void displayEntry(MediaEntry entry, boolean showStatus, boolean showMediaType) {
+    private void displayEntry(MediaEntry entry, boolean showStatus, boolean showMediaType, boolean showEpisodes) {
         System.out.println("Title: " + entry.getTitle());
 
         if (showMediaType)
@@ -253,8 +254,6 @@ public class Library implements java.io.Serializable {
         } else if (entry instanceof Anime) {
             Anime anime = (Anime) entry;
             System.out.println("Genre: " + anime.getDisplayGenre());
-            System.out.println("Season Number: " + (anime.getSeasonNumber() == -1 ? "-" : anime.getSeasonNumber()));
-            System.out.println("Current Episode: " + (anime.getCurrentEpisode() == -1 ? "-" : anime.getCurrentEpisode()));
             System.out.println("Total Episodes: " + anime.getTotalEpisodes());
         } else if (entry instanceof Movie) {
             System.out.println("Genre: " + entry.getDisplayGenre());
@@ -266,5 +265,10 @@ public class Library implements java.io.Serializable {
 
         System.out.println("Rating: " + entry.getDisplayRating());
         System.out.println("Review: " + entry.getDisplayReview());
+
+        if (entry instanceof Anime && showEpisodes) {
+            System.out.println();
+            ((Anime) entry).displayEpisodes();
+        }
     }
 }
