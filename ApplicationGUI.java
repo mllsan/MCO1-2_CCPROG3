@@ -2,11 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ApplicationGUI extends JFrame {
-    private User activeUser;
-
-    // color palette
-    private static final Color BG = new Color(250, 248, 245);           // cream
-    private static final Color TEXT = new Color(70, 75, 85);            // grayish black
+    private LibraryController controller;
+    private static final Color BG = new Color(250, 248, 245);
+    private static final Color TEXT = new Color(70, 75, 85);
 
     public ApplicationGUI() {
         setTitle("Login Portal");
@@ -18,8 +16,7 @@ public class ApplicationGUI extends JFrame {
 
         if (handleAuthentication()) {
             buildMainMenu();
-        } 
-        else {
+        } else {
             System.exit(0);
         }
     }
@@ -77,7 +74,7 @@ public class ApplicationGUI extends JFrame {
                         if (user == null) {
                             JOptionPane.showMessageDialog(null, "Account does not exist!", "Error", JOptionPane.ERROR_MESSAGE);
                         } else if (user.getPassword().equals(password)) {
-                            this.activeUser = user;
+                            this.controller = new LibraryController(user);
                             return true;
                         } else {
                             String nextAction = handleWrongPassword(user);
@@ -91,8 +88,7 @@ public class ApplicationGUI extends JFrame {
                                 loggingIn = false; 
                             }
                         }
-                    } 
-                    else {
+                    } else {
                         loggingIn = false;
                     }
                 }
@@ -120,8 +116,9 @@ public class ApplicationGUI extends JFrame {
                     } else if (SaveData.accountExists(newUsername)) {
                         JOptionPane.showMessageDialog(null, "Username already taken!", "Error", JOptionPane.ERROR_MESSAGE);
                     } else {
-                        this.activeUser = new User(newUsername, newPassword);
-                        SaveData.saveAccount(this.activeUser);
+                        User newUser = new User(newUsername, newPassword);
+                        SaveData.saveAccount(newUser);
+                        this.controller = new LibraryController(newUser);
                         JOptionPane.showMessageDialog(null, "Account created successfully!");
                         return true;
                     }
@@ -145,12 +142,9 @@ public class ApplicationGUI extends JFrame {
                 null, choices, choices[0]
         );
 
-        // try again
         if (option == 0) { 
             return "retry";
-        } 
-        // reset pw
-        else if (option == 1) { 
+        } else if (option == 1) { 
             JPasswordField newPassword = createStyledPasswordField();
             int reset = JOptionPane.showConfirmDialog(null, newPassword, "Enter New Password:", JOptionPane.OK_CANCEL_OPTION);
             
@@ -164,7 +158,6 @@ public class ApplicationGUI extends JFrame {
                 }
             }
         }
-        
         return "cancel";
     }
 
@@ -200,6 +193,8 @@ public class ApplicationGUI extends JFrame {
         getContentPane().removeAll();
 
         setTitle("Media Vault");
+        setSize(450, 480);
+        setLocationRelativeTo(null);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(BG);
@@ -209,9 +204,9 @@ public class ApplicationGUI extends JFrame {
         title.setFont(new Font("Segoe UI", Font.BOLD, 30));
         title.setForeground(TEXT);
 
-        JLabel welcome = new JLabel("Welcome, " + activeUser.getUsername(), SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        title.setForeground(TEXT);
+        JLabel welcome = new JLabel("Welcome, " + controller.getActiveUser().getUsername(), SwingConstants.CENTER);
+        welcome.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        welcome.setForeground(TEXT);
 
         JPanel north = new JPanel();
         north.setBackground(BG);
@@ -230,7 +225,7 @@ public class ApplicationGUI extends JFrame {
         JPanel center = new JPanel();
         center.setBackground(BG);
         center.setLayout(new GridLayout(5,1,15,15));
-        center.setBorder(BorderFactory.createEmptyBorder(20,60,30,60));
+        center.setBorder(BorderFactory.createEmptyBorder(10,60,30,60));
 
         JButton libraryButton = createMenuButton("📚 View Library");
         center.add(libraryButton);
@@ -243,14 +238,16 @@ public class ApplicationGUI extends JFrame {
         JButton exitButton = createMenuButton("💾 Save & Exit");
         center.add(exitButton);
 
-        // ACTIONS
-        libraryButton.addActionListener(e -> showLibrary());
-        addButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Add Media goes here."));
+        // ACTIONS DELEGATED TO CONTROLLER
+        libraryButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "View Library goes here."));
+        addButton.addActionListener(e -> handleAddEntry());
         searchButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Search Entry goes here."));
         summaryButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Library Summary goes here."));
-        exitButton.addActionListener(e -> {SaveData.saveAccount(activeUser);
-                                             JOptionPane.showMessageDialog(this, "Progress Saved!");
-                                             dispose(); });
+        exitButton.addActionListener(e -> {
+            controller.saveProgress();
+            JOptionPane.showMessageDialog(this, "Progress Saved!");
+            dispose(); 
+        });
     
         mainPanel.add(north, BorderLayout.NORTH);
         mainPanel.add(center, BorderLayout.CENTER);
@@ -264,7 +261,7 @@ public class ApplicationGUI extends JFrame {
     }
 
     private JButton createMenuButton(String text) {
-       JButton button = new JButton(text);
+        JButton button = new JButton(text);
 
         button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         button.setBackground(new Color(125,102,196));
@@ -278,82 +275,132 @@ public class ApplicationGUI extends JFrame {
         return button;
     }
 
-    private void showLibrary() {
-        getContentPane().removeAll();
+    // add entry
+    private void handleAddEntry() {
+        String[] types = {"Anime", "Movie", "Album"};
+        JComboBox<String> typeBox = new JComboBox<>(types);
 
-        setTitle("Media Vault - Library");
-
-        JPanel main = new JPanel(new BorderLayout(15,15));
-        main.setBackground(BG);
-        main.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
-
-        JPanel north = new JPanel(new BorderLayout());
-        north.setBackground(BG);
-
-        JLabel title = new JLabel("📚 My Library", SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        title.setForeground(TEXT);
-
-        north.add(title, BorderLayout.NORTH);
-
-        JPanel filterPanel = new JPanel(new FlowLayout());
-        filterPanel.setBackground(BG);
-
-        JComboBox<String> statusFilter = new JComboBox<>(new String[]{
-                                                            "ALL",
-                                                            "PLANNED",
-                                                            "INPROGRESS",
-                                                            "COMPLETED" });
-        JComboBox<String> mediaFilter = new JComboBox<>(new String[]{
-                                                            "ALL",
-                                                            "Anime",
-                                                            "Movie",
-                                                            "Album" });
+        JTextField titleField = createStyledTextField();
+        JComboBox<Status> statusBox = new JComboBox<>(Status.values());
         
-        JButton refreshButton = createMenuButton("Refresh");
+        JTextField ratingField = createStyledTextField();
+        JTextField reviewField = createStyledTextField();
+        ratingField.setEnabled(false);
+        reviewField.setEnabled(false);
 
-        filterPanel.add(new JLabel("Status"));
-        filterPanel.add(statusFilter);
-        filterPanel.add(Box.createHorizontalStrut(20));
-        filterPanel.add(new JLabel("Media"));
-        filterPanel.add(mediaFilter);
-        filterPanel.add(Box.createHorizontalStrut(20));
-        filterPanel.add(refreshButton);
+        statusBox.addActionListener(e -> {
+            boolean isCompleted = statusBox.getSelectedItem() == Status.COMPLETED;
+            ratingField.setEnabled(isCompleted);
+            reviewField.setEnabled(isCompleted);
+            if (!isCompleted) {
+                ratingField.setText("");
+                reviewField.setText("");
+            }
+        });
 
-        north.add(filterPanel, BorderLayout.SOUTH);
-        main.add(title, BorderLayout.NORTH);
+        JPanel specificPanel = new JPanel(new GridLayout(0, 1, 4, 4));
+        specificPanel.setOpaque(false);
 
-        JPanel libraryPanel = new JPanel();
-        libraryPanel.setLayout(new BoxLayout(libraryPanel, BoxLayout.Y_AXIS));
-        libraryPanel.setBackground(BG);
+        JComboBox<Genre> genreBox = new JComboBox<>(Genre.values());
+        JComboBox<MusicGenre> musicGenreBox = new JComboBox<>(MusicGenre.values());
+        JTextField durationField = createStyledTextField();
+        JTextField artistField = createStyledTextField();
+        JTextField totalEpField = createStyledTextField();
+        JTextField currentEpField = createStyledTextField();
 
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(Color.WHITE);
+        Runnable updateSpecificFields = () -> {
+            specificPanel.removeAll();
+            String selectedType = (String) typeBox.getSelectedItem();
 
-        card.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(220,220,220)),
-                                                        BorderFactory.createEmptyBorder(15,15,15,15)));
+            if ("Anime".equals(selectedType)) {
+                specificPanel.add(createStyledLabel("Genre:"));
+                specificPanel.add(genreBox);
+                specificPanel.add(createStyledLabel("Total Episodes:"));
+                specificPanel.add(totalEpField);
+                specificPanel.add(createStyledLabel("Current Episode Watched (if In Progress):"));
+                specificPanel.add(currentEpField);
+            } else if ("Movie".equals(selectedType)) {
+                specificPanel.add(createStyledLabel("Genre:"));
+                specificPanel.add(genreBox);
+                specificPanel.add(createStyledLabel("Duration (minutes):"));
+                specificPanel.add(durationField);
+            } else if ("Album".equals(selectedType)) {
+                specificPanel.add(createStyledLabel("Artist Name:"));
+                specificPanel.add(artistField);
+                specificPanel.add(createStyledLabel("Music Genre:"));
+                specificPanel.add(musicGenreBox);
+            }
+            specificPanel.revalidate();
+            specificPanel.repaint();
+        };
 
-        card.add(new JLabel("One Piece"));
-        card.add(new JLabel("Anime"));
-        card.add(new JLabel("Status: Completed"));
-        card.add(new JLabel("Episodes: 1137"));
-        card.add(new JLabel("Rating: 10"));
-        card.add(new JLabel("Review: Peak Fiction"));
+        typeBox.addActionListener(e -> updateSpecificFields.run());
+        updateSpecificFields.run();
 
-        libraryPanel.add(card);
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setOpaque(false);
 
-        JScrollPane scrollPane = new JScrollPane(libraryPanel);
+        formPanel.add(createStyledLabel("Media Type:"));
+        formPanel.add(typeBox);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(createStyledLabel("Title:"));
+        formPanel.add(titleField);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(createStyledLabel("Status:"));
+        formPanel.add(statusBox);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(specificPanel);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(createStyledLabel("Rating (1-10) (Completed Only):"));
+        formPanel.add(ratingField);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(createStyledLabel("Review (Completed Only):"));
+        formPanel.add(reviewField);
 
-        scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        int result = JOptionPane.showConfirmDialog(this, formPanel, "Add New Media Entry", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        main.add(scrollPane, BorderLayout.CENTER);
+        if (result == JOptionPane.OK_OPTION) {
+            String title = titleField.getText().trim();
+            Status status = (Status) statusBox.getSelectedItem();
+            int rating = -1;
+            String review = "";
 
-        add(main);
+            if (status == Status.COMPLETED) {
+                try {
+                    rating = Integer.parseInt(ratingField.getText().trim());
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Rating must be a valid number between 1 and 10!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                review = reviewField.getText().trim();
+            }
 
-        revalidate();
-        repaint();
+            String selectedType = (String) typeBox.getSelectedItem();
+            String error = null;
+
+            try {
+                if ("Anime".equals(selectedType)) {
+                    int totalEp = Integer.parseInt(totalEpField.getText().trim());
+                    int curEp = currentEpField.getText().trim().isEmpty() ? 0 : Integer.parseInt(currentEpField.getText().trim());
+                    error = controller.addAnime(title, status, rating, review, totalEp, (Genre) genreBox.getSelectedItem(), curEp);
+                } else if ("Movie".equals(selectedType)) {
+                    int duration = Integer.parseInt(durationField.getText().trim());
+                    error = controller.addMovie(title, status, rating, review, duration, (Genre) genreBox.getSelectedItem());
+                } else if ("Album".equals(selectedType)) {
+                    String artist = artistField.getText().trim();
+                    error = controller.addAlbum(title, status, rating, review, artist, (MusicGenre) musicGenreBox.getSelectedItem());
+                }
+
+                if (error != null) {
+                    JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "'" + title + "' added successfully!");
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter valid numerical values for episode or duration numbers!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     public static void main(String[] args) {
