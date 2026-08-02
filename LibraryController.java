@@ -1,11 +1,11 @@
 import java.util.ArrayList;
 
 /**
- * Controller class managing application logic and state mutations for the Media Vault library.
+ * Controller class manages GUI logic and state mutations for the Media Vault library.
  * 
- * Responsibilities:
- * - Validates inputs and handles creation/updates of Anime, Movie, and Album entries.
- * - Bridges Model data operations with View components (CLI/GUI).
+ * Relationships:
+ * - Validates inputs and handles updates of Media entries.
+ * - Bridges Model data operations with View components.
  */
 public class LibraryController {
     private User activeUser;
