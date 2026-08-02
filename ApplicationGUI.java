@@ -21,7 +21,8 @@ public class ApplicationGUI extends JFrame {
      */
     public ApplicationGUI() {
         setTitle("Login Portal");
-        setSize(420, 320);
+        setSize(850, 600);
+        setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -195,8 +196,6 @@ public class ApplicationGUI extends JFrame {
         getContentPane().removeAll();
 
         setTitle("Media Vault");
-        setSize(450, 480);
-        setLocationRelativeTo(null);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(BG);
