@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 public class ApplicationGUI extends JFrame {
     private LibraryController controller;
@@ -53,9 +54,9 @@ public class ApplicationGUI extends JFrame {
                 boolean loggingIn = true;
 
                 while (loggingIn) {
-                    JTextField usernameField = createStyledTextField();
+                    JTextField usernameField = (JTextField) createInputField(false);
                     usernameField.setText(inputUN); 
-                    JPasswordField passwordField = createStyledPasswordField();
+                    JPasswordField passwordField = (JPasswordField) createInputField(true);
 
                     JPanel panel = new JPanel(new GridLayout(0, 1, 6, 6));
                     panel.setOpaque(false);
@@ -95,8 +96,8 @@ public class ApplicationGUI extends JFrame {
             } 
             // new account
             else if (choice == 1) {
-                JTextField newUsernameField = createStyledTextField();
-                JPasswordField newPasswordField = createStyledPasswordField();
+                JTextField newUsernameField = (JTextField) createInputField(false);
+                JPasswordField newPasswordField = (JPasswordField) createInputField(true);
 
                 JPanel panel = new JPanel(new GridLayout(0, 1, 6, 6));
                 panel.setOpaque(false);
@@ -145,7 +146,7 @@ public class ApplicationGUI extends JFrame {
         if (option == 0) { 
             return "retry";
         } else if (option == 1) { 
-            JPasswordField newPassword = createStyledPasswordField();
+            JPasswordField newPassword = (JPasswordField) createInputField(true);
             int reset = JOptionPane.showConfirmDialog(null, newPassword, "Enter New Password:", JOptionPane.OK_CANCEL_OPTION);
             
             if (reset == JOptionPane.OK_OPTION) {
@@ -159,34 +160,6 @@ public class ApplicationGUI extends JFrame {
             }
         }
         return "cancel";
-    }
-
-    // helpers 
-    private JLabel createStyledLabel(String text) {
-        JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lbl.setForeground(TEXT);
-        return lbl;
-    }
-
-    private JTextField createStyledTextField() {
-        JTextField tf = new JTextField();
-        tf.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        tf.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(210, 205, 220), 1),
-                BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
-        return tf;
-    }
-
-    private JPasswordField createStyledPasswordField() {
-        JPasswordField pf = new JPasswordField();
-        pf.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        pf.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(210, 205, 220), 1),
-                BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
-        return pf;
     }
 
     private void buildMainMenu() {
@@ -260,21 +233,6 @@ public class ApplicationGUI extends JFrame {
         setVisible(true);
     }
 
-    private JButton createMenuButton(String text) {
-        JButton button = new JButton(text);
-
-        button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        button.setBackground(new Color(125,102,196));
-        button.setForeground(Color.WHITE);
-        button.setOpaque(true);
-        button.setBorderPainted(false);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createEmptyBorder(12,15,12,15));
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        return button;
-    }
-
     private void showLibrary() {
         getContentPane().removeAll();
 
@@ -305,16 +263,42 @@ public class ApplicationGUI extends JFrame {
                                                             "Anime",
                                                             "Movie",
                                                             "Album" });
+
+        JComboBox<String> genreFilter = new JComboBox<>();
+        genreFilter.addItem("ALL");
+
+        mediaFilter.addActionListener(e -> {
+            genreFilter.removeAllItems();
+            genreFilter.addItem("ALL");
+            String selectedMedia = (String) mediaFilter.getSelectedItem();
+
+            if ("Anime".equals(selectedMedia) || "Movie".equals(selectedMedia)) {
+                genreFilter.setEnabled(true);
+                for (Genre g : Genre.values()) {
+                    genreFilter.addItem(g.toString());
+                }
+            } else if ("Album".equals(selectedMedia)) {
+                genreFilter.setEnabled(true);
+                for (MusicGenre mg : MusicGenre.values()) {
+                    genreFilter.addItem(mg.toString());
+                }
+            } else {
+                genreFilter.setEnabled(false);
+            }
+        });
         
         JButton refresh = createMenuButton("Refresh");
         JButton back = createMenuButton("← Back");
 
-        filterPanel.add(new JLabel("Status"));
+        filterPanel.add(new JLabel("Status:"));
         filterPanel.add(statusFilter);
-        filterPanel.add(Box.createHorizontalStrut(15));
-        filterPanel.add(new JLabel("Media"));
+        filterPanel.add(Box.createHorizontalStrut(10));
+        filterPanel.add(new JLabel("Media:"));
         filterPanel.add(mediaFilter);
-        filterPanel.add(Box.createHorizontalStrut(20));
+        filterPanel.add(Box.createHorizontalStrut(10));
+        filterPanel.add(new JLabel("Genre:"));
+        filterPanel.add(genreFilter);
+        filterPanel.add(Box.createHorizontalStrut(15));
         filterPanel.add(refresh);
         filterPanel.add(back);
 
@@ -331,12 +315,12 @@ public class ApplicationGUI extends JFrame {
 
         main.add(scrollPane, BorderLayout.CENTER);
 
-        // BUTTONS
         refresh.addActionListener(e -> {
             libraryPanel.removeAll();
 
             String media = (String) mediaFilter.getSelectedItem();
             String statusText = (String) statusFilter.getSelectedItem();
+            String selectedGenre = genreFilter.isEnabled() ? (String) genreFilter.getSelectedItem() : "ALL";
 
             Status status = null;
 
@@ -344,8 +328,8 @@ public class ApplicationGUI extends JFrame {
                 status = Status.valueOf(statusText);
             }
 
-            for (MediaEntry entry : controller.getFilteredEntries(media, status)) {
-                libraryPanel.add(createEntryCard(entry));
+            for (MediaEntry entry : controller.getFilteredEntries(media, status, selectedGenre)) {
+                libraryPanel.add(createEntryCard(entry, false));
                 libraryPanel.add(Box.createVerticalStrut(15));
             }
 
@@ -371,26 +355,58 @@ public class ApplicationGUI extends JFrame {
         refresh.doClick();
     }
 
-    private JPanel createEntryCard(MediaEntry entry) {
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card,BoxLayout.Y_AXIS));
-        card.setBackground(BG);
-
-        card.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(new Color(220,220,220)),
-                        BorderFactory.createEmptyBorder(15,15,15,15)));
+    private JPanel createEntryCard(MediaEntry entry, boolean showEpisodes) {
+        JPanel card = createStyledCard(15, 15, 15, 15);
 
         JLabel title = new JLabel(entry.getTitle());
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
 
         card.add(title);
-        card.add(new JLabel(entry.getMediaType()));
+        card.add(new JLabel("Type: " + entry.getMediaType()));
         card.add(new JLabel("Status: " + entry.getStatus()));
 
         if (entry instanceof Anime) {
             Anime anime = (Anime) entry;
             card.add(new JLabel("Genre: " + anime.getDisplayGenre()));
             card.add(new JLabel("Episodes: " + anime.getTotalEpisodes()));
+
+            // Only render episode table if explicitly requested (e.g. in Search Entry)
+            if (showEpisodes) {
+                card.add(Box.createVerticalStrut(10));
+
+                JPanel epTablePanel = new JPanel();
+                epTablePanel.setLayout(new BoxLayout(epTablePanel, BoxLayout.Y_AXIS));
+                epTablePanel.setBackground(Color.WHITE);
+
+                for (Episode ep : anime.getEpisodes()) {
+                    JPanel row = new JPanel(new BorderLayout());
+                    row.setBackground(Color.WHITE);
+                    row.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
+                            BorderFactory.createEmptyBorder(6, 8, 6, 8)
+                    ));
+
+                    JLabel epLabel = new JLabel("Episode " + ep.getEpisodeNumber());
+                    epLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                    epLabel.setForeground(TEXT);
+
+                    JLabel epStatusLabel = new JLabel(ep.getStatus().toString());
+                    epStatusLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+                    epStatusLabel.setForeground(TEXT);
+
+                    row.add(epLabel, BorderLayout.WEST);
+                    row.add(epStatusLabel, BorderLayout.EAST);
+                    epTablePanel.add(row);
+                }
+
+                JScrollPane epTableScroll = new JScrollPane(epTablePanel);
+                epTableScroll.setPreferredSize(new Dimension(550, 220));
+                epTableScroll.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+                epTableScroll.getVerticalScrollBar().setUnitIncrement(12);
+
+                card.add(epTableScroll);
+            }
+
         } else if (entry instanceof Movie) {
             Movie movie = (Movie) entry;
             card.add(new JLabel("Genre: " + movie.getDisplayGenre()));
@@ -409,7 +425,6 @@ public class ApplicationGUI extends JFrame {
         return card;
     }
 
-    // add entry
     private void handleAddEntry() {
         showEntryForm(null);
     }
@@ -428,7 +443,7 @@ public class ApplicationGUI extends JFrame {
         JPanel top = new JPanel(new FlowLayout());
         top.setBackground(BG);
 
-        JTextField searchField = createStyledTextField();
+        JTextField searchField = (JTextField) createInputField(false);
         searchField.setPreferredSize(new Dimension(220,35));
 
         JButton searchButton = createMenuButton("Search");
@@ -474,7 +489,8 @@ public class ApplicationGUI extends JFrame {
                 resultPanel.add(none);
                 resultPanel.add(Box.createVerticalGlue());
             } else {
-                JPanel card = createEntryCard(entry);
+                // Pass true to show individual episode details in Search Entry
+                JPanel card = createEntryCard(entry, true);
 
                 JPanel buttons = new JPanel(new FlowLayout());
                 buttons.setBackground(BG);
@@ -498,6 +514,7 @@ public class ApplicationGUI extends JFrame {
                     if (choice == JOptionPane.YES_OPTION) {
                         controller.removeEntry(entry);
                         JOptionPane.showMessageDialog(this, "Entry removed successfully!");
+                        buildMainMenu();
                     }
                 });
             }
@@ -529,23 +546,23 @@ public class ApplicationGUI extends JFrame {
 
         main.add(titleLabel, BorderLayout.NORTH);
 
-        JTextField titleField = createStyledTextField();
+        JTextField titleField = (JTextField) createInputField(false);
         JComboBox<Status> statusBox = new JComboBox<>(Status.values());
         
         String[] types = {"Anime", "Movie", "Album"};
         JComboBox<String> typeBox = new JComboBox<>(types);
 
-        JTextField ratingField = createStyledTextField();
-        JTextField reviewField = createStyledTextField();
-        ratingField.setEnabled(false);
-        reviewField.setEnabled(false);
+        JTextField ratingField = (JTextField) createInputField(false);
+        JTextField reviewField = (JTextField) createInputField(false);
 
         JComboBox<Genre> genreBox = new JComboBox<>(Genre.values());
         JComboBox<MusicGenre> musicGenreBox = new JComboBox<>(MusicGenre.values());
-        JTextField durationField = createStyledTextField();
-        JTextField artistField = createStyledTextField();
-        JTextField totalEpField = createStyledTextField();
-        JTextField currentEpField = createStyledTextField();
+        JTextField durationField = (JTextField) createInputField(false);
+        JTextField artistField = (JTextField) createInputField(false);
+        JTextField totalEpField = (JTextField) createInputField(false);
+        JTextField currentEpField = (JTextField) createInputField(false);
+
+        ArrayList<JComboBox<Status>> epStatusBoxes = new ArrayList<>();
 
         if (editing) {
             titleField.setText(entry.getTitle());
@@ -565,7 +582,6 @@ public class ApplicationGUI extends JFrame {
                 totalEpField.setText(String.valueOf(anime.getTotalEpisodes()));
 
                 int completed = 0;
-
                 for (Episode ep : anime.getEpisodes()) {
                     if (ep.getStatus() == Status.COMPLETED)
                         completed++;
@@ -585,47 +601,84 @@ public class ApplicationGUI extends JFrame {
             }
         }
 
-        statusBox.addActionListener(e -> {
-            boolean isCompleted = statusBox.getSelectedItem() == Status.COMPLETED;
-            ratingField.setEnabled(isCompleted);
-            reviewField.setEnabled(isCompleted);
-            if (!isCompleted) {
-                ratingField.setText("");
-                reviewField.setText("");
-            }
-        });
+        JPanel dynamicPanel = new JPanel();
+        dynamicPanel.setLayout(new BoxLayout(dynamicPanel, BoxLayout.Y_AXIS));
+        dynamicPanel.setOpaque(false);
 
-        JPanel specificPanel = new JPanel(new GridLayout(0, 1, 4, 4));
-        specificPanel.setOpaque(false);
+        Runnable updateFormFields = () -> {
+            dynamicPanel.removeAll();
+            epStatusBoxes.clear();
 
-        Runnable updateSpecificFields = () -> {
-            specificPanel.removeAll();
             String selectedType = (String) typeBox.getSelectedItem();
+            Status selectedStatus = (Status) statusBox.getSelectedItem();
 
             if ("Anime".equals(selectedType)) {
-                specificPanel.add(createStyledLabel("Genre:"));
-                specificPanel.add(genreBox);
-                specificPanel.add(createStyledLabel("Total Episodes:"));
-                specificPanel.add(totalEpField);
-                specificPanel.add(createStyledLabel("Current Episode Watched (if In Progress):"));
-                specificPanel.add(currentEpField);
+                dynamicPanel.add(createStyledLabel("Genre:"));
+                dynamicPanel.add(genreBox);
+                dynamicPanel.add(Box.createVerticalStrut(5));
+                dynamicPanel.add(createStyledLabel("Total Episodes:"));
+                dynamicPanel.add(totalEpField);
+                dynamicPanel.add(Box.createVerticalStrut(8));
+
+                if (editing && entry instanceof Anime) {
+                    Anime anime = (Anime) entry;
+                    dynamicPanel.add(createStyledLabel("Manage Individual Episodes:"));
+                    dynamicPanel.add(Box.createVerticalStrut(6));
+
+                    for (Episode ep : anime.getEpisodes()) {
+                        JPanel epRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
+                        epRow.setOpaque(false);
+
+                        JLabel epLabel = createStyledLabel("Ep " + ep.getEpisodeNumber() + ":");
+
+                        JComboBox<Status> epBox = new JComboBox<>(Status.values());
+                        epBox.setSelectedItem(ep.getStatus());
+                        epBox.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                        epStatusBoxes.add(epBox);
+
+                        epRow.add(epLabel);
+                        epRow.add(epBox);
+                        dynamicPanel.add(epRow);
+                    }
+                    dynamicPanel.add(Box.createVerticalStrut(8));
+                }
             } else if ("Movie".equals(selectedType)) {
-                specificPanel.add(createStyledLabel("Genre:"));
-                specificPanel.add(genreBox);
-                specificPanel.add(createStyledLabel("Duration (minutes):"));
-                specificPanel.add(durationField);
+                dynamicPanel.add(createStyledLabel("Genre:"));
+                dynamicPanel.add(genreBox);
+                dynamicPanel.add(Box.createVerticalStrut(5));
+                dynamicPanel.add(createStyledLabel("Duration (minutes):"));
+                dynamicPanel.add(durationField);
+                dynamicPanel.add(Box.createVerticalStrut(5));
             } else if ("Album".equals(selectedType)) {
-                specificPanel.add(createStyledLabel("Artist Name:"));
-                specificPanel.add(artistField);
-                specificPanel.add(createStyledLabel("Music Genre:"));
-                specificPanel.add(musicGenreBox);
+                dynamicPanel.add(createStyledLabel("Artist Name:"));
+                dynamicPanel.add(artistField);
+                dynamicPanel.add(Box.createVerticalStrut(5));
+                dynamicPanel.add(createStyledLabel("Music Genre:"));
+                dynamicPanel.add(musicGenreBox);
+                dynamicPanel.add(Box.createVerticalStrut(5));
             }
-            specificPanel.revalidate();
-            specificPanel.repaint();
+
+            if (selectedStatus == Status.INPROGRESS) {
+                if ("Anime".equals(selectedType) && !editing) {
+                    dynamicPanel.add(createStyledLabel("Current Episode Watched:"));
+                    dynamicPanel.add(currentEpField);
+                    dynamicPanel.add(Box.createVerticalStrut(5));
+                }
+            } else if (selectedStatus == Status.COMPLETED) {
+                dynamicPanel.add(createStyledLabel("Rating (1-10):"));
+                dynamicPanel.add(ratingField);
+                dynamicPanel.add(Box.createVerticalStrut(5));
+                dynamicPanel.add(createStyledLabel("Review:"));
+                dynamicPanel.add(reviewField);
+                dynamicPanel.add(Box.createVerticalStrut(5));
+            }
+
+            dynamicPanel.revalidate();
+            dynamicPanel.repaint();
         };
 
-        typeBox.addActionListener(e -> updateSpecificFields.run());
-        updateSpecificFields.run();
+        typeBox.addActionListener(e -> updateFormFields.run());
+        statusBox.addActionListener(e -> updateFormFields.run());
 
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
@@ -640,13 +693,9 @@ public class ApplicationGUI extends JFrame {
         formPanel.add(createStyledLabel("Status:"));
         formPanel.add(statusBox);
         formPanel.add(Box.createVerticalStrut(5));
-        formPanel.add(specificPanel);
-        formPanel.add(Box.createVerticalStrut(5));
-        formPanel.add(createStyledLabel("Rating (1-10) (Completed Only):"));
-        formPanel.add(ratingField);
-        formPanel.add(Box.createVerticalStrut(5));
-        formPanel.add(createStyledLabel("Review (Completed Only):"));
-        formPanel.add(reviewField);
+        formPanel.add(dynamicPanel);
+
+        updateFormFields.run();
 
         JScrollPane scrollPane = new JScrollPane(formPanel);
         scrollPane.setBorder(null);
@@ -695,10 +744,11 @@ public class ApplicationGUI extends JFrame {
             String error = null;
 
             try {
-                if(!editing) {
+                if (!editing) {
                     if ("Anime".equals(selectedType)) {
                         int totalEp = Integer.parseInt(totalEpField.getText().trim());
-                        int curEp = currentEpField.getText().trim().isEmpty() ? 0 : Integer.parseInt(currentEpField.getText().trim());
+                        int curEp = (status == Status.INPROGRESS && !currentEpField.getText().trim().isEmpty()) 
+                                    ? Integer.parseInt(currentEpField.getText().trim()) : 0;
                         error = controller.addAnime(title, status, rating, review, totalEp, (Genre) genreBox.getSelectedItem(), curEp);
                     } else if ("Movie".equals(selectedType)) {
                         int duration = Integer.parseInt(durationField.getText().trim());
@@ -708,18 +758,26 @@ public class ApplicationGUI extends JFrame {
                         error = controller.addAlbum(title, status, rating, review, artist, (MusicGenre) musicGenreBox.getSelectedItem());
                     }
                 } else {
-                    error = controller.updateTitle(entry,title);
+                    error = controller.updateTitle(entry, title);
 
-                    if(error != null) {
-                        JOptionPane.showMessageDialog(this,error);
+                    if (error != null) {
+                        JOptionPane.showMessageDialog(this, error);
                         return;
                     }
 
                     if ("Anime".equals(selectedType)) {
                         Anime anime = (Anime) entry;
-                        controller.updateStatus(anime, status, Integer.parseInt(currentEpField.getText().trim()));
+                        int curEp = (status == Status.INPROGRESS && !currentEpField.getText().trim().isEmpty()) 
+                                    ? Integer.parseInt(currentEpField.getText().trim()) : 0;
+                        controller.updateStatus(anime, status, curEp);
                         controller.updateGenre(anime, genreBox.getSelectedItem());
                         error = controller.updateTotalEpisodes(anime, Integer.parseInt(totalEpField.getText().trim()));
+
+                        for (int i = 0; i < epStatusBoxes.size(); i++) {
+                            Status newEpStatus = (Status) epStatusBoxes.get(i).getSelectedItem();
+                            controller.updateEpisodeStatus(anime, i + 1, newEpStatus);
+                        }
+
                     } else if ("Movie".equals(selectedType)) {
                         Movie movie = (Movie) entry;
                         controller.updateStatus(movie, status, 0);
@@ -739,23 +797,25 @@ public class ApplicationGUI extends JFrame {
 
                     if (status == Status.COMPLETED) {
                         error = controller.updateRating(entry, rating);
-                        if(error != null) {
+                        if (error != null) {
                             JOptionPane.showMessageDialog(this, error);
                             return;
                         }
 
-                        error = controller.updateReview(entry,review);
-                        if(error != null) {
+                        error = controller.updateReview(entry, review);
+                        if (error != null) {
                             JOptionPane.showMessageDialog(this, error);
                             return;
                         }
                     }
                     controller.saveProgress();
                 }
+
                 if (error != null) {
                     JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
                 } else {
                     JOptionPane.showMessageDialog(this, editing ? "Entry updated successfully!" : "Entry added successfully!");
+                    buildMainMenu();
                 }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Please enter valid numerical values for episode or duration numbers!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -764,10 +824,147 @@ public class ApplicationGUI extends JFrame {
     }
 
     private void showLibrarySummary() {
-        
+        getContentPane().removeAll();
+
+        setTitle("Media Vault - Summary");
+
+        JPanel main = new JPanel(new BorderLayout(20, 20));
+        main.setBackground(BG);
+        main.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+
+        JLabel title = new JLabel("📊 Library Summary", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setForeground(TEXT);
+
+        main.add(title, BorderLayout.NORTH);
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setOpaque(false);
+
+        JPanel overviewCard = createSummaryCard("OVERVIEW");
+        overviewCard.add(createSummaryRow("Total Media Entries:", String.valueOf(controller.getTotalEntriesCount())));
+        overviewCard.add(createSummaryRow("Average Rating (Completed):", controller.getAverageRatingFormatted()));
+
+        JPanel statusCard = createSummaryCard("STATUSES");
+        statusCard.add(createSummaryRow("Planned:", String.valueOf(controller.getCountByStatus(Status.PLANNED))));
+        statusCard.add(createSummaryRow("In Progress:", String.valueOf(controller.getCountByStatus(Status.INPROGRESS))));
+        statusCard.add(createSummaryRow("Completed:", String.valueOf(controller.getCountByStatus(Status.COMPLETED))));
+
+        JPanel mediaCard = createSummaryCard("MEDIA TYPES");
+        mediaCard.add(createSummaryRow("Anime:", String.valueOf(controller.getCountByMediaType("Anime"))));
+        mediaCard.add(createSummaryRow("Movies:", String.valueOf(controller.getCountByMediaType("Movie"))));
+        mediaCard.add(createSummaryRow("Albums:", String.valueOf(controller.getCountByMediaType("Album"))));
+
+        contentPanel.add(overviewCard);
+        contentPanel.add(Box.createVerticalStrut(15));
+        contentPanel.add(statusCard);
+        contentPanel.add(Box.createVerticalStrut(15));
+        contentPanel.add(mediaCard);
+
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+
+        main.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        bottomPanel.setOpaque(false);
+
+        JButton backButton = createMenuButton("← Back to Menu");
+        backButton.addActionListener(e -> buildMainMenu());
+        bottomPanel.add(backButton);
+
+        main.add(bottomPanel, BorderLayout.SOUTH);
+
+        add(main);
+        revalidate();
+        repaint();
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ApplicationGUI());
+    // HELPERS
+    private JLabel createStyledLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(TEXT);
+        return lbl;
+    }
+
+    private JTextField createInputField(boolean isPassword) {
+        JTextField tf = isPassword ? new JPasswordField() : new JTextField();
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tf.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(210, 205, 220), 1),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        return tf;
+    }
+
+    private JButton createMenuButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        button.setBackground(new Color(125, 102, 196));
+        button.setForeground(Color.WHITE);
+        button.setOpaque(true);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return button;
+    }
+
+    private JPanel createStyledCard(int top, int left, int bottom, int right) {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+                BorderFactory.createEmptyBorder(top, left, bottom, right)
+        ));
+        return card;
+    }
+
+    private JPanel createSummaryCard(String headerTitle) {
+        JPanel card = createStyledCard(12, 16, 12, 16);
+        card.setAlignmentX(Component.CENTER_ALIGNMENT); 
+
+        JLabel header = new JLabel(headerTitle);
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setForeground(new Color(125, 102, 196));
+        header.setAlignmentX(Component.LEFT_ALIGNMENT); 
+
+        card.add(header);
+        card.add(Box.createVerticalStrut(8));
+
+        JSeparator sep = new JSeparator(JSeparator.HORIZONTAL);
+        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+        sep.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(sep);
+
+        card.add(Box.createVerticalStrut(8));
+        return card;
+    }
+
+    private JPanel createSummaryRow(String labelText, String valueText) {
+        JPanel row = new JPanel(new BorderLayout());
+        row.setOpaque(false);
+        row.setAlignmentX(Component.LEFT_ALIGNMENT); 
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        row.setBorder(BorderFactory.createEmptyBorder(3, 0, 3, 0));
+
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        label.setForeground(TEXT);
+
+        JLabel value = new JLabel(valueText);
+        value.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        value.setForeground(TEXT);
+
+        row.add(label, BorderLayout.WEST);
+        row.add(value, BorderLayout.EAST);
+
+        return row;
     }
 }
