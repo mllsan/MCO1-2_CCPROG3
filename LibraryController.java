@@ -65,6 +65,10 @@ public class LibraryController {
             return "Total episodes cannot be 0!";
         }
 
+        if (status == Status.INPROGRESS && (currentEp < 0 || currentEp > totalEpisodes)) {
+            return "Current watched episode cannot be greater than total episodes!";
+        }
+
         Anime anime = new Anime(title.trim(), status, rating, review, totalEpisodes);
         anime.setGenre(genre);
 
