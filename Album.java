@@ -65,7 +65,7 @@ public class Album extends MediaEntry {
     /**
      * Updates the genre of the album.
      *
-     * @param artist the new genre
+     * @param musicGenre the new genre
      */
     public void setMusicGenre(MusicGenre musicGenre) {
         this.musicGenre = musicGenre;
