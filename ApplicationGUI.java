@@ -241,8 +241,8 @@ public class ApplicationGUI extends JFrame {
         // ACTIONS DELEGATED TO CONTROLLER
         libraryButton.addActionListener(e -> showLibrary());
         addButton.addActionListener(e -> handleAddEntry());
-        searchButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Search Entry goes here."));
-        summaryButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Library Summary goes here."));
+        searchButton.addActionListener(e -> searchEntry());
+        summaryButton.addActionListener(e -> showLibrarySummary());
         exitButton.addActionListener(e -> {
             controller.saveProgress();
             JOptionPane.showMessageDialog(this, "Progress Saved!");
@@ -535,6 +535,106 @@ public class ApplicationGUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Please enter valid numerical values for episode or duration numbers!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    private void searchEntry() {
+        getContentPane().removeAll();
+
+        JPanel main = new JPanel(new BorderLayout(20,20));
+        main.setBackground(BG);
+        main.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+
+        JLabel title = new JLabel("Search Entry", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setForeground(TEXT);
+
+        main.add(title, BorderLayout.NORTH);
+
+        JPanel top = new JPanel(new FlowLayout());
+        top.setBackground(BG);
+
+        JTextField searchField = createStyledTextField();
+        searchField.setPreferredSize(new Dimension(220,35));
+
+        JButton searchButton = createMenuButton("Search");
+        JButton backButton = createMenuButton("Back");
+
+        top.add(searchField);
+        top.add(searchButton);
+        top.add(backButton);
+
+        main.add(top, BorderLayout.NORTH);
+
+        JPanel resultPanel = new JPanel();
+        resultPanel.setBackground(BG);
+        resultPanel.setLayout(new BoxLayout(resultPanel, BoxLayout.Y_AXIS));
+
+        JScrollPane scroll = new JScrollPane(resultPanel);
+        scroll.setBorder(null);
+
+        main.add(scroll, BorderLayout.CENTER);
+
+        add(main);
+        revalidate();
+        repaint();
+
+        searchButton.addActionListener(e -> {
+            resultPanel.removeAll();
+
+            String search = searchField.getText().trim();
+
+            MediaEntry entry = controller.searchEntry(search);
+
+            if (entry == null) {
+                JLabel none = new JLabel("Entry not found.");
+                none.setFont(new Font("Segoe UI", Font.BOLD, 18));
+                none.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                resultPanel.add(Box.createVerticalGlue());
+                resultPanel.add(none);
+                resultPanel.add(Box.createVerticalGlue());
+            } else {
+                JPanel card = createEntryCard(entry);
+
+                JPanel buttons = new JPanel(new FlowLayout());
+                buttons.setBackground(BG);
+
+                JButton editButton = createMenuButton("✏ Edit");
+                JButton deleteButton = createMenuButton("🗑 Remove");
+
+                buttons.add(editButton);
+                buttons.add(deleteButton);
+                buttons.add(backButton);
+
+                resultPanel.add(card);
+                resultPanel.add(Box.createVerticalStrut(15));
+                resultPanel.add(buttons);
+
+                editButton.addActionListener(ev -> editEntry(entry));
+                
+                deleteButton.addActionListener(ev -> {
+                    int choice = JOptionPane.showConfirmDialog(null, card, "Delete this entry?", JOptionPane.YES_NO_OPTION);
+
+                    if (choice == JOptionPane.YES_OPTION) {
+                        controller.removeEntry(entry);
+                        JOptionPane.showMessageDialog(this, "Entry removed successfully!");
+                    }
+                });
+            }
+
+            resultPanel.revalidate();
+            resultPanel.repaint();
+        });
+
+        backButton.addActionListener(e -> buildMainMenu());
+    }
+
+    private void editEntry(MediaEntry entry) {
+
+    }
+
+    private void showLibrarySummary() {
+
     }
 
     public static void main(String[] args) {
