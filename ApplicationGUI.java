@@ -537,6 +537,8 @@ public class ApplicationGUI extends JFrame {
 
         JTextField ratingField = createStyledTextField();
         JTextField reviewField = createStyledTextField();
+        ratingField.setEnabled(false);
+        reviewField.setEnabled(false);
 
         JComboBox<Genre> genreBox = new JComboBox<>(Genre.values());
         JComboBox<MusicGenre> musicGenreBox = new JComboBox<>(MusicGenre.values());
