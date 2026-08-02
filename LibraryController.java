@@ -199,7 +199,7 @@ public class LibraryController {
     }
 
     public ArrayList<MediaEntry> getFilteredEntries(String mediaType, Status status) {
-        ArrayList<MediaEntry> filtered = new ArratList<>();
+        ArrayList<MediaEntry> filtered = new ArrayList<>();
 
         for (MediaEntry entry : activeUser.getLibrary().getEntries()) {
             boolean mediaMatch = mediaType.equals("ALL") || entry.getMediaType().equalsIgnoreCase(mediaType);
