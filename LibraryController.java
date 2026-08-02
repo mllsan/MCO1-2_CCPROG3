@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class LibraryController {
     private User activeUser;
 
@@ -190,5 +192,24 @@ public class LibraryController {
 
     public void saveProgress() {
         SaveData.saveAccount(activeUser);
+    }
+
+    public ArrayList<MediaEntry> getAllEntries() {
+        return activeUser.getLibrary().getEntries();
+    }
+
+    public ArrayList<MediaEntry> getFilteredEntries(String mediaType, Status status) {
+        ArrayList<MediaEntry> filtered = new ArratList<>();
+
+        for (MediaEntry entry : activeUser.getLibrary().getEntries()) {
+            boolean mediaMatch = mediaType.equals("ALL") || entry.getMediaType().equalsIgnoreCase(mediaType);
+            boolean statusMatch = status == null || entry.getStatus() == status;
+
+            if (mediaMatch && statusMatch) {
+                filtered.add(entry);
+            }
+        }
+
+        return filtered;
     }
 }
