@@ -239,7 +239,7 @@ public class ApplicationGUI extends JFrame {
         center.add(exitButton);
 
         // ACTIONS DELEGATED TO CONTROLLER
-        libraryButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "View Library goes here."));
+        libraryButton.addActionListener(e -> showLibrary());
         addButton.addActionListener(e -> handleAddEntry());
         searchButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Search Entry goes here."));
         summaryButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Library Summary goes here."));
@@ -273,6 +273,140 @@ public class ApplicationGUI extends JFrame {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         return button;
+    }
+
+    private void showLibrary() {
+        getContentPane().removeAll();
+
+        setTitle("Media Vault - Library");
+
+        JPanel main = new JPanel(new BorderLayout(15,15));
+        main.setBackground(BG);
+        main.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+
+        // TITLE
+        JLabel title = new JLabel("📚 My Library", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setForeground(TEXT);
+
+        main.add(title, BorderLayout.NORTH);
+
+        // FILTERS
+        JPanel filterPanel = new JPanel(new FlowLayout());
+        filterPanel.setBackground(BG);
+
+        JComboBox<String> statusFilter = new JComboBox<>(new String[]{
+                                                            "ALL",
+                                                            "PLANNED",
+                                                            "INPROGRESS",
+                                                            "COMPLETED" });
+        JComboBox<String> mediaFilter = new JComboBox<>(new String[]{
+                                                            "ALL",
+                                                            "Anime",
+                                                            "Movie",
+                                                            "Album" });
+        
+        JButton refresh = createMenuButton("Refresh");
+        JButton back = createMenuButton("← Back");
+
+        filterPanel.add(new JLabel("Status"));
+        filterPanel.add(statusFilter);
+        filterPanel.add(Box.createHorizontalStrut(15));
+        filterPanel.add(new JLabel("Media"));
+        filterPanel.add(mediaFilter);
+        filterPanel.add(Box.createHorizontalStrut(20));
+        filterPanel.add(refresh);
+        filterPanel.add(back);
+
+        main.add(filterPanel, BorderLayout.SOUTH);
+
+        // LIBRARY
+        JPanel libraryPanel = new JPanel();
+        libraryPanel.setLayout(new BoxLayout(libraryPanel, BoxLayout.Y_AXIS));
+        libraryPanel.setBackground(BG);
+
+        JScrollPane scrollPane = new JScrollPane(libraryPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        main.add(scrollPane, BorderLayout.CENTER);
+
+        // BUTTONS
+        refresh.addActionListener(e -> {
+            libraryPanel.removeAll();
+
+            String media = (String) mediaFilter.getSelectedItem();
+            String statusText = (String) statusFilter.getSelectedItem();
+
+            Status status = null;
+
+            if(!statusText.equals("ALL")) {
+                status = Status.valueOf(statusText);
+            }
+
+            for (MediaEntry entry : controller.getFilteredEntries(media, status)) {
+                libraryPanel.add(createEntryCard(entry));
+                libraryPanel.add(Box.createVerticalStrut(15));
+            }
+
+            if (libraryPanel.getComponentCount() == 0) {
+                JLabel empty = new JLabel("No entries Found.");
+                empty.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+                empty.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                libraryPanel.add(empty);
+            }
+
+            libraryPanel.revalidate();
+            libraryPanel.repaint();
+        });
+
+        back.addActionListener(e -> buildMainMenu());
+
+        add(main);
+
+        revalidate();
+        repaint();
+
+        refresh.doClick();
+    }
+
+    private JPanel createEntryCard(MediaEntry entry) {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card,BoxLayout.Y_AXIS));
+        card.setBackground(BG);
+
+        card.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(new Color(220,220,220)),
+                        BorderFactory.createEmptyBorder(15,15,15,15)));
+
+        JLabel title = new JLabel(entry.getTitle());
+        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+
+        card.add(title);
+        card.add(new JLabel(entry.getMediaType()));
+        card.add(new JLabel("Status: " + entry.getStatus()));
+
+        if (entry instanceof Anime) {
+            Anime anime = (Anime) entry;
+            card.add(new JLabel("Genre: " + anime.getDisplayGenre()));
+            card.add(new JLabel("Episodes: " + anime.getTotalEpisodes()));
+        } else if (entry instanceof Movie) {
+            Movie movie = (Movie) entry;
+            card.add(new JLabel("Genre: " + movie.getDisplayGenre()));
+            card.add(new JLabel("Duration: " + movie.getDuration() + " mins"));
+        } else if (entry instanceof Album) {
+            Album album = (Album) entry;
+            card.add(new JLabel("Artist: " + album.getArtist()));
+            card.add(new JLabel("Music Genre: " + album.getDisplayMusicGenre()));
+        }
+
+        if (entry.getStatus() == Status.COMPLETED) {
+            card.add(new JLabel("Rating: " + entry.getDisplayRating()));
+            card.add(new JLabel("Review: " + entry.getDisplayReview()));
+        }
+
+        return card;
     }
 
     // add entry
