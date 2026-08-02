@@ -66,7 +66,6 @@ public abstract class MediaEntry implements java.io.Serializable {
     public void setTitle(String title) {
         //Ensures that title is not empty
         if (title == null || title.isBlank()) {
-            System.out.println("Title cannot be empty.");
         } else {
             this.title = title;
         }
