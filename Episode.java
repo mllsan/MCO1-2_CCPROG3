@@ -49,14 +49,4 @@ public class Episode implements Serializable {
     public void setStatus(Status status) {
         this.status = status;
     }
-
-    @Override
-    /**
-     * Creates a formatted string of the episode's details.
-     *
-     * @return the formatted String showing its episode number and status
-     */
-    public String toString() {
-        return String.format("Ep %d | Status: %s", episodeNumber, status);
-    }
 }
