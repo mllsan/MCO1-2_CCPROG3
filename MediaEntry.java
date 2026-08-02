@@ -117,11 +117,10 @@ public abstract class MediaEntry implements java.io.Serializable {
         if (status == Status.COMPLETED) {
             // Ensures that its within the range of a rating (1-10)
             if (rating < 1 || rating > 10) 
-                System.out.println("Rating must be between 1 and 10");
+                {}
             else
                 this.rating = rating;
         } else {
-            System.out.println("Only completed entries can be rated.");
             this.rating = -1;
         }
     }
@@ -161,7 +160,6 @@ public abstract class MediaEntry implements java.io.Serializable {
         if (status == Status.COMPLETED)
             this.review = review;
         else {
-            System.out.println("Only completed entries can be reviewed.");
             this.review = "";
         }
     }
