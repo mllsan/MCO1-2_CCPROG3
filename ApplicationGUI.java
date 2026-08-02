@@ -411,130 +411,7 @@ public class ApplicationGUI extends JFrame {
 
     // add entry
     private void handleAddEntry() {
-        String[] types = {"Anime", "Movie", "Album"};
-        JComboBox<String> typeBox = new JComboBox<>(types);
-
-        JTextField titleField = createStyledTextField();
-        JComboBox<Status> statusBox = new JComboBox<>(Status.values());
-        
-        JTextField ratingField = createStyledTextField();
-        JTextField reviewField = createStyledTextField();
-        ratingField.setEnabled(false);
-        reviewField.setEnabled(false);
-
-        statusBox.addActionListener(e -> {
-            boolean isCompleted = statusBox.getSelectedItem() == Status.COMPLETED;
-            ratingField.setEnabled(isCompleted);
-            reviewField.setEnabled(isCompleted);
-            if (!isCompleted) {
-                ratingField.setText("");
-                reviewField.setText("");
-            }
-        });
-
-        JPanel specificPanel = new JPanel(new GridLayout(0, 1, 4, 4));
-        specificPanel.setOpaque(false);
-
-        JComboBox<Genre> genreBox = new JComboBox<>(Genre.values());
-        JComboBox<MusicGenre> musicGenreBox = new JComboBox<>(MusicGenre.values());
-        JTextField durationField = createStyledTextField();
-        JTextField artistField = createStyledTextField();
-        JTextField totalEpField = createStyledTextField();
-        JTextField currentEpField = createStyledTextField();
-
-        Runnable updateSpecificFields = () -> {
-            specificPanel.removeAll();
-            String selectedType = (String) typeBox.getSelectedItem();
-
-            if ("Anime".equals(selectedType)) {
-                specificPanel.add(createStyledLabel("Genre:"));
-                specificPanel.add(genreBox);
-                specificPanel.add(createStyledLabel("Total Episodes:"));
-                specificPanel.add(totalEpField);
-                specificPanel.add(createStyledLabel("Current Episode Watched (if In Progress):"));
-                specificPanel.add(currentEpField);
-            } else if ("Movie".equals(selectedType)) {
-                specificPanel.add(createStyledLabel("Genre:"));
-                specificPanel.add(genreBox);
-                specificPanel.add(createStyledLabel("Duration (minutes):"));
-                specificPanel.add(durationField);
-            } else if ("Album".equals(selectedType)) {
-                specificPanel.add(createStyledLabel("Artist Name:"));
-                specificPanel.add(artistField);
-                specificPanel.add(createStyledLabel("Music Genre:"));
-                specificPanel.add(musicGenreBox);
-            }
-            specificPanel.revalidate();
-            specificPanel.repaint();
-        };
-
-        typeBox.addActionListener(e -> updateSpecificFields.run());
-        updateSpecificFields.run();
-
-        JPanel formPanel = new JPanel();
-        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        formPanel.setOpaque(false);
-
-        formPanel.add(createStyledLabel("Media Type:"));
-        formPanel.add(typeBox);
-        formPanel.add(Box.createVerticalStrut(5));
-        formPanel.add(createStyledLabel("Title:"));
-        formPanel.add(titleField);
-        formPanel.add(Box.createVerticalStrut(5));
-        formPanel.add(createStyledLabel("Status:"));
-        formPanel.add(statusBox);
-        formPanel.add(Box.createVerticalStrut(5));
-        formPanel.add(specificPanel);
-        formPanel.add(Box.createVerticalStrut(5));
-        formPanel.add(createStyledLabel("Rating (1-10) (Completed Only):"));
-        formPanel.add(ratingField);
-        formPanel.add(Box.createVerticalStrut(5));
-        formPanel.add(createStyledLabel("Review (Completed Only):"));
-        formPanel.add(reviewField);
-
-        int result = JOptionPane.showConfirmDialog(this, formPanel, "Add New Media Entry", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-        if (result == JOptionPane.OK_OPTION) {
-            String title = titleField.getText().trim();
-            Status status = (Status) statusBox.getSelectedItem();
-            int rating = -1;
-            String review = "";
-
-            if (status == Status.COMPLETED) {
-                try {
-                    rating = Integer.parseInt(ratingField.getText().trim());
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Rating must be a valid number between 1 and 10!", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                review = reviewField.getText().trim();
-            }
-
-            String selectedType = (String) typeBox.getSelectedItem();
-            String error = null;
-
-            try {
-                if ("Anime".equals(selectedType)) {
-                    int totalEp = Integer.parseInt(totalEpField.getText().trim());
-                    int curEp = currentEpField.getText().trim().isEmpty() ? 0 : Integer.parseInt(currentEpField.getText().trim());
-                    error = controller.addAnime(title, status, rating, review, totalEp, (Genre) genreBox.getSelectedItem(), curEp);
-                } else if ("Movie".equals(selectedType)) {
-                    int duration = Integer.parseInt(durationField.getText().trim());
-                    error = controller.addMovie(title, status, rating, review, duration, (Genre) genreBox.getSelectedItem());
-                } else if ("Album".equals(selectedType)) {
-                    String artist = artistField.getText().trim();
-                    error = controller.addAlbum(title, status, rating, review, artist, (MusicGenre) musicGenreBox.getSelectedItem());
-                }
-
-                if (error != null) {
-                    JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(this, "'" + title + "' added successfully!");
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Please enter valid numerical values for episode or duration numbers!", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
+        showEntryForm(null);
     }
 
     private void searchEntry() {
@@ -547,8 +424,6 @@ public class ApplicationGUI extends JFrame {
         JLabel title = new JLabel("Search Entry", SwingConstants.CENTER);
         title.setFont(new Font("Segoe UI", Font.BOLD, 26));
         title.setForeground(TEXT);
-
-        main.add(title, BorderLayout.NORTH);
 
         JPanel top = new JPanel(new FlowLayout());
         top.setBackground(BG);
@@ -563,7 +438,12 @@ public class ApplicationGUI extends JFrame {
         top.add(searchButton);
         top.add(backButton);
 
-        main.add(top, BorderLayout.NORTH);
+        JPanel north = new JPanel();
+        north.setLayout(new BorderLayout());
+
+        north.add(title, BorderLayout.NORTH);
+        north.add(top, BorderLayout.SOUTH);
+        main.add(north, BorderLayout.NORTH);
 
         JPanel resultPanel = new JPanel();
         resultPanel.setBackground(BG);
@@ -630,11 +510,259 @@ public class ApplicationGUI extends JFrame {
     }
 
     private void editEntry(MediaEntry entry) {
+        showEntryForm(entry);
+    }
 
+    private void showEntryForm(MediaEntry entry) {
+        boolean editing = (entry != null);
+
+        getContentPane().removeAll();
+
+        JPanel main = new JPanel(new BorderLayout(20,20));
+        main.setBackground(BG);
+        main.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+
+        JLabel titleLabel = new JLabel(editing ? "✏ Edit Entry" : "➕ Add Entry", SwingConstants.CENTER);
+
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(TEXT);
+
+        main.add(titleLabel, BorderLayout.NORTH);
+
+        JTextField titleField = createStyledTextField();
+        JComboBox<Status> statusBox = new JComboBox<>(Status.values());
+        
+        String[] types = {"Anime", "Movie", "Album"};
+        JComboBox<String> typeBox = new JComboBox<>(types);
+
+        JTextField ratingField = createStyledTextField();
+        JTextField reviewField = createStyledTextField();
+
+        JComboBox<Genre> genreBox = new JComboBox<>(Genre.values());
+        JComboBox<MusicGenre> musicGenreBox = new JComboBox<>(MusicGenre.values());
+        JTextField durationField = createStyledTextField();
+        JTextField artistField = createStyledTextField();
+        JTextField totalEpField = createStyledTextField();
+        JTextField currentEpField = createStyledTextField();
+
+        if (editing) {
+            titleField.setText(entry.getTitle());
+            statusBox.setSelectedItem(entry.getStatus());
+            typeBox.setSelectedItem(entry.getMediaType());
+            typeBox.setEnabled(false);
+        
+            if (entry.getStatus() == Status.COMPLETED) {
+                ratingField.setText(String.valueOf(entry.getRating()));
+                reviewField.setText(entry.getReview());
+            }
+
+            if (entry instanceof Anime) {
+                Anime anime = (Anime) entry;
+
+                genreBox.setSelectedItem(anime.getGenre());
+                totalEpField.setText(String.valueOf(anime.getTotalEpisodes()));
+
+                int completed = 0;
+
+                for (Episode ep : anime.getEpisodes()) {
+                    if (ep.getStatus() == Status.COMPLETED)
+                        completed++;
+                }
+
+                currentEpField.setText(String.valueOf(completed));
+            } else if (entry instanceof Movie) {
+                Movie movie = (Movie) entry;
+
+                genreBox.setSelectedItem(movie.getGenre());
+                durationField.setText(String.valueOf(movie.getDuration()));
+            } else {
+                Album album = (Album) entry;
+
+                artistField.setText(album.getArtist());
+                musicGenreBox.setSelectedItem(album.getMusicGenre());
+            }
+        }
+
+        statusBox.addActionListener(e -> {
+            boolean isCompleted = statusBox.getSelectedItem() == Status.COMPLETED;
+            ratingField.setEnabled(isCompleted);
+            reviewField.setEnabled(isCompleted);
+            if (!isCompleted) {
+                ratingField.setText("");
+                reviewField.setText("");
+            }
+        });
+
+        JPanel specificPanel = new JPanel(new GridLayout(0, 1, 4, 4));
+        specificPanel.setOpaque(false);
+
+        Runnable updateSpecificFields = () -> {
+            specificPanel.removeAll();
+            String selectedType = (String) typeBox.getSelectedItem();
+
+            if ("Anime".equals(selectedType)) {
+                specificPanel.add(createStyledLabel("Genre:"));
+                specificPanel.add(genreBox);
+                specificPanel.add(createStyledLabel("Total Episodes:"));
+                specificPanel.add(totalEpField);
+                specificPanel.add(createStyledLabel("Current Episode Watched (if In Progress):"));
+                specificPanel.add(currentEpField);
+            } else if ("Movie".equals(selectedType)) {
+                specificPanel.add(createStyledLabel("Genre:"));
+                specificPanel.add(genreBox);
+                specificPanel.add(createStyledLabel("Duration (minutes):"));
+                specificPanel.add(durationField);
+            } else if ("Album".equals(selectedType)) {
+                specificPanel.add(createStyledLabel("Artist Name:"));
+                specificPanel.add(artistField);
+                specificPanel.add(createStyledLabel("Music Genre:"));
+                specificPanel.add(musicGenreBox);
+            }
+            specificPanel.revalidate();
+            specificPanel.repaint();
+        };
+
+        typeBox.addActionListener(e -> updateSpecificFields.run());
+        updateSpecificFields.run();
+
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setOpaque(false);
+
+        formPanel.add(createStyledLabel("Media Type:"));
+        formPanel.add(typeBox);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(createStyledLabel("Title:"));
+        formPanel.add(titleField);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(createStyledLabel("Status:"));
+        formPanel.add(statusBox);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(specificPanel);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(createStyledLabel("Rating (1-10) (Completed Only):"));
+        formPanel.add(ratingField);
+        formPanel.add(Box.createVerticalStrut(5));
+        formPanel.add(createStyledLabel("Review (Completed Only):"));
+        formPanel.add(reviewField);
+
+        JScrollPane scrollPane = new JScrollPane(formPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setBackground(BG);
+
+        main.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(BG);
+
+        JButton saveButton = createMenuButton(editing ? "💾 Save Changes" : "➕ Add Entry");
+        JButton cancelButton = createMenuButton("Cancel");
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(saveButton);
+        main.add(buttonPanel, BorderLayout.SOUTH);
+
+        add(main);
+        revalidate();
+        repaint();
+
+        cancelButton.addActionListener(e -> {
+            if (editing)
+                searchEntry();
+            else 
+                buildMainMenu();
+        });
+
+        saveButton.addActionListener(e -> {
+            String title = titleField.getText().trim();
+            Status status = (Status) statusBox.getSelectedItem();
+            int rating = -1;
+            String review = "";
+
+            if (status == Status.COMPLETED) {
+                try {
+                    rating = Integer.parseInt(ratingField.getText().trim());
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Rating must be a valid number between 1 and 10!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                review = reviewField.getText().trim();
+            }
+
+            String selectedType = (String) typeBox.getSelectedItem();
+            String error = null;
+
+            try {
+                if(!editing) {
+                    if ("Anime".equals(selectedType)) {
+                        int totalEp = Integer.parseInt(totalEpField.getText().trim());
+                        int curEp = currentEpField.getText().trim().isEmpty() ? 0 : Integer.parseInt(currentEpField.getText().trim());
+                        error = controller.addAnime(title, status, rating, review, totalEp, (Genre) genreBox.getSelectedItem(), curEp);
+                    } else if ("Movie".equals(selectedType)) {
+                        int duration = Integer.parseInt(durationField.getText().trim());
+                        error = controller.addMovie(title, status, rating, review, duration, (Genre) genreBox.getSelectedItem());
+                    } else if ("Album".equals(selectedType)) {
+                        String artist = artistField.getText().trim();
+                        error = controller.addAlbum(title, status, rating, review, artist, (MusicGenre) musicGenreBox.getSelectedItem());
+                    }
+                } else {
+                    error = controller.updateTitle(entry,title);
+
+                    if(error != null) {
+                        JOptionPane.showMessageDialog(this,error);
+                        return;
+                    }
+
+                    if ("Anime".equals(selectedType)) {
+                        Anime anime = (Anime) entry;
+                        controller.updateStatus(anime, status, Integer.parseInt(currentEpField.getText().trim()));
+                        controller.updateGenre(anime, genreBox.getSelectedItem());
+                        error = controller.updateTotalEpisodes(anime, Integer.parseInt(totalEpField.getText().trim()));
+                    } else if ("Movie".equals(selectedType)) {
+                        Movie movie = (Movie) entry;
+                        controller.updateStatus(movie, status, 0);
+                        controller.updateGenre(movie, genreBox.getSelectedItem());
+                        error = controller.updateDuration(movie, Integer.parseInt(durationField.getText().trim()));
+                    } else if ("Album".equals(selectedType)) {
+                        Album album = (Album) entry;
+                        controller.updateStatus(album, status, 0);
+                        controller.updateGenre(album, musicGenreBox.getSelectedItem());
+                        error = controller.updateArtist(album, artistField.getText().trim());
+                    }
+
+                    if (error != null) {
+                        JOptionPane.showMessageDialog(this, error);
+                        return;
+                    }
+
+                    if (status == Status.COMPLETED) {
+                        error = controller.updateRating(entry, rating);
+                        if(error != null) {
+                            JOptionPane.showMessageDialog(this, error);
+                            return;
+                        }
+
+                        error = controller.updateReview(entry,review);
+                        if(error != null) {
+                            JOptionPane.showMessageDialog(this, error);
+                            return;
+                        }
+                    }
+                    controller.saveProgress();
+                }
+                if (error != null) {
+                    JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, editing ? "Entry updated successfully!" : "Entry added successfully!");
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter valid numerical values for episode or duration numbers!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 
     private void showLibrarySummary() {
-
+        
     }
 
     public static void main(String[] args) {
