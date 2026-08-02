@@ -126,14 +126,4 @@ public class Anime extends MediaEntry {
             }
         }
     }
-
-    /**
-     * Displays all episodes and its status.
-     */
-    public void displayEpisodes() {
-        System.out.println("--- Episode Progress ---");
-        for (Episode ep : episodes) {
-            System.out.println(ep);
-        }
-    }
 }
