@@ -9,7 +9,7 @@ import java.io.Serializable;
  *
  */
 public class User implements Serializable {
-    private static final long SERIAL_VERSION_UID = 1L;
+    private static final long serialVersionUID = 1L;
     private String username;
     private String password;
     private Library library;
@@ -49,7 +49,7 @@ public class User implements Serializable {
     /**
      * Retrieves the user's library of media entries
      *
-     * @return the user's password
+     * @return the user's library
      */
     public Library getLibrary() {
         return library;

@@ -28,8 +28,9 @@ public class Main {
                     System.out.println("[1] All Entries");
                     System.out.println("[2] Status");
                     System.out.println("[3] Media Type");
+                    System.out.println("[4] Genre Type");
                     System.out.print(">> ");
-                    int viewChoice = InputChecker.getValidInput(scanner,1,3);
+                    int viewChoice = InputChecker.getValidInput(scanner,1,4);
                     System.out.println();
 
                     switch (viewChoice) {
@@ -79,6 +80,23 @@ public class Main {
                                 default:
                                     System.out.println("Error: Invalid Option");
                             }
+                            break;
+                        case 4:
+                            System.out.println("Filter by:");
+                            System.out.println("[1] Anime/Movie Genre");
+                            System.out.println("[2] Album Genre");
+                            System.out.print(">> ");
+                            int genreChoice = InputChecker.getValidInput(scanner, 1, 2);
+                            System.out.println();
+
+                            if (genreChoice == 1) {
+                                Genre selectedGenre = media.selectGenre();
+                                activeAccount.getLibrary().displayEntriesByGenre(selectedGenre);
+                            } else {
+                                MusicGenre selectedMusicGenre = media.selectMusicGenre();
+                                activeAccount.getLibrary().displayEntriesByMusicGenre(selectedMusicGenre);
+                            }
+                            break;
                     }
                     break;
                     
