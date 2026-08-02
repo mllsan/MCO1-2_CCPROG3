@@ -2,11 +2,23 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 
+/**
+ * GUI of the Media Vault application.
+ * 
+ * Relationships:
+ * - View component of the MVC pattern.
+ * - Delegates all logic and state updates to LibraryController.
+ * - Utilizes Java Swing for custom styling.
+ */
 public class ApplicationGUI extends JFrame {
     private LibraryController controller;
     private static final Color BG = new Color(250, 248, 245);
     private static final Color TEXT = new Color(70, 75, 85);
 
+    /**
+     * Constructor of the GUI window.
+     * Sets initial state of screen.
+     */
     public ApplicationGUI() {
         setTitle("Login Portal");
         setSize(420, 320);
@@ -22,6 +34,9 @@ public class ApplicationGUI extends JFrame {
         }
     }
 
+    /**
+     * Sets the default colors across dialogs and text fields.
+     */
     private void applyTheme() {
         UIManager.put("OptionPane.background", BG);
         UIManager.put("Panel.background", BG);
@@ -34,6 +49,11 @@ public class ApplicationGUI extends JFrame {
         UIManager.put("PasswordField.caretForeground", TEXT);
     }
 
+    /**
+     * Handles initial user authentication.
+     *
+     * @return true if account authentication succeeds and system begins; false if user exits
+     */
     private boolean handleAuthentication() {
         String inputUN = ""; 
 
@@ -132,6 +152,12 @@ public class ApplicationGUI extends JFrame {
         }
     }
 
+    /**
+     * Prompts the user with choices when password authentication fails.
+     *
+     * @param loadedProfile the profile being accessed
+     * @return option key
+     */
     private String handleWrongPassword(User loadedProfile) {
         String[] choices = {"Try Again", "Reset Password", "Cancel"};
         int option = JOptionPane.showOptionDialog(
@@ -162,6 +188,9 @@ public class ApplicationGUI extends JFrame {
         return "cancel";
     }
 
+    /**
+     * Builds and displays the main menu.
+     */
     private void buildMainMenu() {
         getContentPane().removeAll();
 
@@ -233,6 +262,9 @@ public class ApplicationGUI extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Builds and displays the view Library screen.
+     */
     private void showLibrary() {
         getContentPane().removeAll();
 
@@ -355,6 +387,13 @@ public class ApplicationGUI extends JFrame {
         refresh.doClick();
     }
 
+    /**
+     * Generates a UI card panel representing a media entry.
+     *
+     * @param entry the Media Entry to represent
+     * @param showEpisodes true if scrollable episode table for Anime entries should be shown
+     * @return JPanel containing entry details
+     */
     private JPanel createEntryCard(MediaEntry entry, boolean showEpisodes) {
         JPanel card = createStyledCard(15, 15, 15, 15);
 
@@ -370,7 +409,6 @@ public class ApplicationGUI extends JFrame {
             card.add(new JLabel("Genre: " + anime.getDisplayGenre()));
             card.add(new JLabel("Episodes: " + anime.getTotalEpisodes()));
 
-            // Only render episode table if explicitly requested (e.g. in Search Entry)
             if (showEpisodes) {
                 card.add(Box.createVerticalStrut(10));
 
@@ -425,10 +463,16 @@ public class ApplicationGUI extends JFrame {
         return card;
     }
 
+    /**
+     * Initiates adding a new media entry.
+     */
     private void handleAddEntry() {
         showEntryForm(null);
     }
 
+    /**
+     * Displays the search entry screen.
+     */
     private void searchEntry() {
         getContentPane().removeAll();
 
@@ -489,7 +533,6 @@ public class ApplicationGUI extends JFrame {
                 resultPanel.add(none);
                 resultPanel.add(Box.createVerticalGlue());
             } else {
-                // Pass true to show individual episode details in Search Entry
                 JPanel card = createEntryCard(entry, true);
 
                 JPanel buttons = new JPanel(new FlowLayout());
@@ -526,10 +569,20 @@ public class ApplicationGUI extends JFrame {
         backButton.addActionListener(e -> buildMainMenu());
     }
 
+    /**
+     * Navigates to the entry form in editing mode for a specific media entry.
+     *
+     * @param entry the Media Entry to edit
+     */
     private void editEntry(MediaEntry entry) {
         showEntryForm(entry);
     }
 
+    /**
+     * Interface for creating a new media entry or editing an existing one.
+     * 
+     * @param entry target MediaEntry to edit, or null if creating a new entry
+     */
     private void showEntryForm(MediaEntry entry) {
         boolean editing = (entry != null);
 
@@ -823,6 +876,9 @@ public class ApplicationGUI extends JFrame {
         });
     }
 
+    /**
+     * Builds and displays the Library Summary screen.
+     */
     private void showLibrarySummary() {
         getContentPane().removeAll();
 
@@ -885,6 +941,13 @@ public class ApplicationGUI extends JFrame {
     }
 
     // HELPERS
+
+    /**
+     * Creates a styled label component formatted for form field headers.
+     *
+     * @param text text content for the label
+     * @return styled JLabel instance
+     */
     private JLabel createStyledLabel(String text) {
         JLabel lbl = new JLabel(text);
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -892,6 +955,12 @@ public class ApplicationGUI extends JFrame {
         return lbl;
     }
 
+    /**
+     * Creates a styled text field or password field component.
+     *
+     * @param isPassword if true, returns JPasswordField; otherwise returns JTextField
+     * @return styled text input field component
+     */
     private JTextField createInputField(boolean isPassword) {
         JTextField tf = isPassword ? new JPasswordField() : new JTextField();
         tf.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -902,6 +971,12 @@ public class ApplicationGUI extends JFrame {
         return tf;
     }
 
+    /**
+     * Creates a styled button component.
+     *
+     * @param text button display text
+     * @return styled JButton instance
+     */
     private JButton createMenuButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -915,6 +990,15 @@ public class ApplicationGUI extends JFrame {
         return button;
     }
 
+    /**
+     * Creates a white background card container with gray borders and specified padding.
+     *
+     * @param top top inset border padding
+     * @param left left inset border padding
+     * @param bottom bottom inset border padding
+     * @param right right inset border padding
+     * @return formatted JPanel card wrapper
+     */
     private JPanel createStyledCard(int top, int left, int bottom, int right) {
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
@@ -926,6 +1010,12 @@ public class ApplicationGUI extends JFrame {
         return card;
     }
 
+    /**
+     * Creates a styled summary overview card.
+     *
+     * @param headerTitle section header text
+     * @return formatted summary card JPanel
+     */
     private JPanel createSummaryCard(String headerTitle) {
         JPanel card = createStyledCard(12, 16, 12, 16);
         card.setAlignmentX(Component.CENTER_ALIGNMENT); 
@@ -947,6 +1037,13 @@ public class ApplicationGUI extends JFrame {
         return card;
     }
 
+    /**
+     * Creates a horizontal summary row panel.
+     *
+     * @param labelText label for the statistic
+     * @param valueText calculated numerical value
+     * @return formatted single-row JPanel
+     */
     private JPanel createSummaryRow(String labelText, String valueText) {
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
