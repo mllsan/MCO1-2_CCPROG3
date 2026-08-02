@@ -20,6 +20,10 @@ public class Library implements java.io.Serializable {
         entries = new ArrayList<>();
     }
 
+    public ArrayList<MediaEntry> getEntries() {
+        return entries;
+    }
+    
     /**
      * Searches for a media entry by its title.
      *
